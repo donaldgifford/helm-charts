@@ -83,7 +83,7 @@ Replace the Go-oriented CI with a Helm-focused pipeline matching the RFC spec.
 
 #### Tasks
 
-- [ ] Create `.github/workflows/ci.yml` with the following jobs:
+- [x] Create `.github/workflows/ci.yml` with the following jobs:
   - **lint** — `helm lint charts/*`
   - **helm-unittest** — run `helm-unittest` on all charts (skip gracefully if no charts
     exist)
@@ -92,9 +92,9 @@ Replace the Go-oriented CI with a Helm-focused pipeline matching the RFC spec.
     manifests via `helm template` output
   - **chart-test** — `ct lint` always; `ct list-changed` to gate Kind cluster creation and
     `ct install` (only when charts change)
-- [ ] Update `chart-release.yml` — verify it works as-is (looks correct already) or adjust
+- [x] Update `chart-release.yml` — verify it works as-is (looks correct already) or adjust
   if needed
-- [ ] Ensure all workflows use pinned action versions with SHA or tag
+- [x] Ensure all workflows use pinned action versions with SHA or tag
 
 #### Success Criteria
 

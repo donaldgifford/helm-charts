@@ -1,0 +1,178 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Check for charts
+        id: check
+        run: |
+          if ls charts/*/Chart.yaml 1>/dev/null 2>&1; then
+            echo "has_charts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_charts=false" >> "$GITHUB_OUTPUT"
+            echo "No charts found, skipping lint"
+          fi
+
+      - name: Lint charts
+        if: steps.check.outputs.has_charts == 'true'
+        run: helm lint charts/*
+
+  helm-unittest:
+    name: Helm Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install helm-unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+
+      - name: Check for charts with tests
+        id: check
+        run: |
+          if ls charts/*/tests/*_test.yaml 1>/dev/null 2>&1; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "No unit tests found, skipping"
+          fi
+
+      - name: Run unit tests
+        if: steps.check.outputs.has_tests == 'true'
+        run: helm unittest charts/*
+
+  helm-docs:
+    name: Helm Docs Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install helm-docs
+        run: |
+          curl -sSL https://github.com/norwoodj/helm-docs/releases/download/v1.14.2/helm-docs_1.14.2_Linux_x86_64.tar.gz \
+            | tar xz helm-docs && sudo mv helm-docs /usr/local/bin/
+
+      - name: Check for charts
+        id: check
+        run: |
+          if ls charts/*/Chart.yaml 1>/dev/null 2>&1; then
+            echo "has_charts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_charts=false" >> "$GITHUB_OUTPUT"
+            echo "No charts found, skipping docs check"
+          fi
+
+      - name: Check docs are up to date
+        if: steps.check.outputs.has_charts == 'true'
+        run: |
+          helm-docs --chart-search-root charts
+          if ! git diff --exit-code; then
+            echo "::error::helm-docs are out of date. Run 'make helm-docs' and commit."
+            exit 1
+          fi
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Check for charts
+        id: check
+        run: |
+          if ls charts/*/Chart.yaml 1>/dev/null 2>&1; then
+            echo "has_charts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_charts=false" >> "$GITHUB_OUTPUT"
+            echo "No charts found, skipping manifest scan"
+          fi
+
+      - name: Render and scan manifests
+        if: steps.check.outputs.has_charts == 'true'
+        run: |
+          mkdir -p /tmp/rendered
+          for chart in charts/*/; do
+            name=$(basename "$chart")
+            helm template "$name" "$chart" > "/tmp/rendered/${name}.yaml"
+          done
+
+      - name: Trivy manifest scan
+        if: steps.check.outputs.has_charts == 'true'
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: config
+          scan-ref: /tmp/rendered
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  chart-test:
+    name: Chart Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2
+
+      - name: Lint charts
+        run: ct lint --config ct.yaml --all
+
+      - name: Detect changed charts
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --config ct.yaml)
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create kind cluster
+        if: steps.list-changed.outputs.changed == 'true'
+        uses: helm/kind-action@v1
+
+      - name: Install and test charts
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct install --config ct.yaml
