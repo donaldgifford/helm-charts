@@ -254,7 +254,7 @@ enabled/disabled states and key value combinations described in DESIGN-0001.
 
 #### Tasks
 
-- [ ] Create `charts/fleetdm/tests/deployment_test.yaml`:
+- [x] Create `charts/fleetdm/tests/deployment_test.yaml`:
   - Renders a Deployment
   - `spec.replicas` matches `replicaCount`; absent when `autoscaling.enabled`
   - Image tag defaults to `appVersion`; explicit tag overrides
@@ -265,48 +265,48 @@ enabled/disabled states and key value combinations described in DESIGN-0001.
     set
   - `tmp` emptyDir volume mounted
   - Security context: `readOnlyRootFilesystem`, `runAsNonRoot`
-- [ ] Create `charts/fleetdm/tests/secret_test.yaml`:
+- [x] Create `charts/fleetdm/tests/secret_test.yaml`:
   - MySQL secret rendered when `existingSecret` empty; skipped when set
   - PXC secret rendered when `pxc.enabled` and `existingSecret` empty; skipped otherwise
   - Redis secret rendered when `cache.usePassword` and `existingSecret` empty
   - All secrets have `helm.sh/resource-policy: keep`
-- [ ] Create `charts/fleetdm/tests/pxc_cluster_test.yaml`:
+- [x] Create `charts/fleetdm/tests/pxc_cluster_test.yaml`:
   - Renders when `pxc.enabled: true`; no output when `false`
   - `metadata.name` matches `pxc.clusterName`
   - `spec.pxc.size` matches value
   - `spec.secretsName` derived vs existingSecret
   - HAProxy enabled by default
   - Backup absent when disabled; present with schedule when enabled
-- [ ] Create `charts/fleetdm/tests/httproute_test.yaml`:
+- [x] Create `charts/fleetdm/tests/httproute_test.yaml`:
   - No output when `httpRoute.enabled: false`
   - HTTPRoute only when `certManager.enabled: false`
   - Both Certificate + HTTPRoute when both enabled
   - Hostname and parentRefs match values
-- [ ] Create `charts/fleetdm/tests/ingress_test.yaml`:
+- [x] Create `charts/fleetdm/tests/ingress_test.yaml`:
   - No output when `ingress.enabled: false`
   - Renders Ingress when enabled
   - `ingressClassName`, annotations, hosts, TLS from values
-- [ ] Create `charts/fleetdm/tests/hpa_test.yaml`:
+- [x] Create `charts/fleetdm/tests/hpa_test.yaml`:
   - No output when `autoscaling.enabled: false`
   - Renders HPA when enabled
   - `minReplicas`, `maxReplicas`, CPU target match values
-- [ ] Create `charts/fleetdm/tests/pdb_test.yaml`:
+- [x] Create `charts/fleetdm/tests/pdb_test.yaml`:
   - No output when `podDisruptionBudget.enabled: false`
   - Renders PDB when enabled
   - `minAvailable` matches value
-- [ ] Create `charts/fleetdm/tests/service_test.yaml`:
+- [x] Create `charts/fleetdm/tests/service_test.yaml`:
   - Renders Service
   - Port matches `service.port`
   - Type matches `service.type`
-- [ ] Create `charts/fleetdm/tests/serviceaccount_test.yaml`:
+- [x] Create `charts/fleetdm/tests/serviceaccount_test.yaml`:
   - Renders when `serviceAccount.create: true`; skipped when `false`
   - Annotations from values
-- [ ] Create `charts/fleetdm/tests/valkey_test.yaml`:
+- [x] Create `charts/fleetdm/tests/valkey_test.yaml`:
   - No output when `valkey.enabled: false`
   - Renders StatefulSet + Service when enabled
   - Persistence: emptyDir default, PVC when `persistence.enabled`
   - Password arg present when `cache.usePassword: true`
-- [ ] Run `make helm-unittest` and verify all tests pass
+- [x] Run `make helm-unittest` and verify all tests pass
 
 #### Success Criteria
 

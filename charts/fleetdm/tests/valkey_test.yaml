@@ -1,0 +1,76 @@
+---
+suite: valkey
+templates:
+  - templates/valkey.yaml
+tests:
+  - it: does not render when valkey.enabled is false
+    set:
+      valkey:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders StatefulSet and Service when enabled
+    set:
+      valkey:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: Service
+        documentIndex: 0
+      - isKind:
+          of: StatefulSet
+        documentIndex: 1
+
+  - it: uses emptyDir by default
+    set:
+      valkey:
+        enabled: true
+        persistence:
+          enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+        documentIndex: 1
+
+  - it: uses PVC when persistence is enabled
+    set:
+      valkey:
+        enabled: true
+        persistence:
+          enabled: true
+          size: 5Gi
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 5Gi
+        documentIndex: 1
+
+  - it: includes requirepass when cache.usePassword is true
+    set:
+      valkey:
+        enabled: true
+      cache:
+        usePassword: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "--requirepass"
+        documentIndex: 1
+
+  - it: omits requirepass when cache.usePassword is false
+    set:
+      valkey:
+        enabled: true
+      cache:
+        usePassword: false
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].command
+        documentIndex: 1

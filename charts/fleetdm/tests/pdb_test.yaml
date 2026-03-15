@@ -1,0 +1,30 @@
+---
+suite: pdb
+templates:
+  - templates/pdb.yaml
+tests:
+  - it: does not render when podDisruptionBudget.enabled is false
+    set:
+      podDisruptionBudget:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders PDB when enabled
+    set:
+      podDisruptionBudget:
+        enabled: true
+    asserts:
+      - isKind:
+          of: PodDisruptionBudget
+
+  - it: sets minAvailable from values
+    set:
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 2
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 2

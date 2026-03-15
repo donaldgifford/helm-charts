@@ -1,0 +1,74 @@
+---
+suite: ingress
+templates:
+  - templates/ingress.yaml
+tests:
+  - it: does not render when ingress.enabled is false
+    set:
+      ingress:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders Ingress when enabled
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: fleet.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - isKind:
+          of: Ingress
+
+  - it: sets ingressClassName
+    set:
+      ingress:
+        enabled: true
+        className: nginx
+        hosts:
+          - host: fleet.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+
+  - it: sets annotations
+    set:
+      ingress:
+        enabled: true
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt
+        hosts:
+          - host: fleet.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/cluster-issuer"]
+          value: letsencrypt
+
+  - it: configures TLS
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: fleet.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: fleet-tls
+            hosts:
+              - fleet.example.com
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: fleet-tls
