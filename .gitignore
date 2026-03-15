@@ -1,0 +1,11 @@
+# Helm packaging artifacts
+*.tgz
+.cr-release-packages/
+.cr-index/
+
+# env file
+.env
+
+# Editor/IDE
+# .idea/
+# .vscode/
