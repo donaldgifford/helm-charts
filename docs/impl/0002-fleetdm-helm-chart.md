@@ -220,22 +220,22 @@ Implement `helm test` pods that validate connectivity after install/upgrade.
 
 #### Tasks
 
-- [ ] Create `charts/fleetdm/templates/tests/test-mysql-connection.yaml`:
+- [x] Create `charts/fleetdm/templates/tests/test-mysql-connection.yaml`:
   - `helm.sh/hook: test` annotation
   - `mysql:8.0` image
-  - Runs `SELECT 1` against MySQL address using Fleet credentials
+  - Runs `mysqladmin ping` against MySQL address using Fleet credentials
   - `restartPolicy: Never`
-- [ ] Create `charts/fleetdm/templates/tests/test-valkey-connection.yaml`:
+- [x] Create `charts/fleetdm/templates/tests/test-valkey-connection.yaml`:
   - `helm.sh/hook: test` annotation
   - Only rendered when cache is configured (`valkey.enabled` or `cache.address` set)
   - `valkey/valkey` image
   - Runs `PING` against cache address
   - Password support when `cache.usePassword: true`
-- [ ] Create `charts/fleetdm/templates/tests/test-fleet-health.yaml`:
+- [x] Create `charts/fleetdm/templates/tests/test-fleet-health.yaml`:
   - `helm.sh/hook: test` annotation with `hook-weight: "5"` (runs after connection tests)
   - `curlimages/curl` image
   - Hits `/healthz` on Fleet service, asserts HTTP 200
-- [ ] Verify `helm template fleetdm charts/fleetdm --show-only templates/tests/` renders
+- [x] Verify `helm template fleetdm charts/fleetdm --show-only templates/tests/` renders
   test pods
 
 #### Success Criteria

@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "fleetdm.fullname" . }}-test-mysql
+  labels:
+    {{- include "fleetdm.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: mysql-test
+      image: mysql:8.0
+      command:
+        - sh
+        - -c
+        - |
+          mysqladmin ping -h "$(FLEET_MYSQL_ADDRESS)" \
+            -u "$(FLEET_MYSQL_USERNAME)" \
+            -p"$(FLEET_MYSQL_PASSWORD)" \
+            --connect-timeout=5
+      env:
+        - name: FLEET_MYSQL_ADDRESS
+          value: {{ include "fleetdm.mysqlAddress" . | quote }}
+        - name: FLEET_MYSQL_USERNAME
+          value: {{ .Values.database.username | quote }}
+        - name: FLEET_MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "fleetdm.mysqlSecretName" . }}
+              key: {{ .Values.database.passwordKey }}
