@@ -1,0 +1,22 @@
+---
+apiVersion: v2
+name: fleetdm
+description: A Helm chart for FleetDM — open-source device management with PXC-backed MySQL and optional Valkey cache
+type: application
+version: 0.1.0
+# renovate: image=fleetdm/fleet
+appVersion: "4.82.0"
+home: https://fleetdm.com
+sources:
+  - https://github.com/fleetdm/fleet
+  - https://github.com/donaldgifford/helm-charts
+keywords:
+  - fleetdm
+  - fleet
+  - mdm
+  - osquery
+  - device-management
+maintainers:
+  - name: Donald Gifford
+    url: https://github.com/donaldgifford
+dependencies: []

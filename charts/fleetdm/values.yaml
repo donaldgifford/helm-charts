@@ -1,0 +1,263 @@
+---
+# -- Number of Fleet server replicas (ignored when autoscaling is enabled)
+replicaCount: 1
+
+image:
+  # -- Fleet container image repository
+  repository: fleetdm/fleet
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (defaults to the chart appVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+fleet:
+  tls:
+    # -- Enable TLS termination in Fleet (usually false when TLS terminates at the gateway)
+    enabled: false
+  logging:
+    # -- Enable debug logging
+    debug: false
+    # -- Use JSON-formatted logs
+    json: true
+    # -- Disable the Fleet startup banner
+    disableBanner: false
+  # -- Fleet server URL (the external URL users/agents connect to)
+  serverURL: ""
+  license:
+    # -- Name of an existing secret containing the Fleet Premium license key
+    secretName: ""
+    # -- Key in the license secret that holds the license value
+    secretKey: "license-key"
+  # -- Automatically apply SQL migrations on startup
+  autoApplySQLMigrations: true
+  auth:
+    # -- Bcrypt cost for password hashing
+    bcryptCost: 12
+    # -- Salt key size in bytes
+    saltKeySize: 24
+  session:
+    # -- Session key size in bytes
+    keySize: 64
+    # -- Session duration (Go duration string)
+    duration: "2160h"
+  appToken:
+    # -- App token key size in bytes
+    keySize: 24
+    # -- App token validity period (Go duration string)
+    validityPeriod: "8760h"
+  vulnerabilities:
+    # -- Path for vulnerability database files
+    databasesPath: "/tmp/vuln"
+
+database:
+  # -- MySQL server address (auto-derived from PXC when empty and pxc.enabled is true)
+  address: ""
+  # -- MySQL database name
+  name: fleet
+  # -- MySQL username
+  username: fleet
+  # -- Name of an existing secret containing the MySQL password
+  existingSecret: ""
+  # -- Key in the MySQL secret that holds the password
+  passwordKey: mysql-password
+  # -- Maximum number of open database connections
+  maxOpenConns: 50
+  # -- Maximum number of idle database connections
+  maxIdleConns: 50
+  # -- Maximum lifetime of a database connection (Go duration string)
+  connMaxLifetime: "0"
+
+cache:
+  # -- Cache server address (auto-derived from Valkey when empty and valkey.enabled is true)
+  address: ""
+  # -- Enable password authentication for cache
+  usePassword: true
+  # -- Name of an existing secret containing the cache password
+  existingSecret: ""
+  # -- Key in the cache secret that holds the password
+  passwordKey: redis-password
+  # -- Redis database number
+  database: "0"
+
+pxc:
+  # -- Deploy a PerconaXtraDBCluster CR for MySQL
+  enabled: true
+  # -- PXC cluster name
+  clusterName: fleet-pxc
+  # -- Name of an existing secret for PXC credentials
+  existingSecret: ""
+  # -- Number of PXC nodes (must be odd: 1, 3, 5, or 7)
+  size: 3
+  image:
+    # -- PXC image repository
+    repository: percona/percona-xtradb-cluster
+    # -- PXC image tag
+    tag: "8.0.36-28.1"
+  resources:
+    requests:
+      # -- PXC node CPU request
+      cpu: 600m
+      # -- PXC node memory request
+      memory: 1Gi
+    limits:
+      # -- PXC node memory limit
+      memory: 2Gi
+  storage:
+    # -- PXC storage size per node
+    size: 20Gi
+    # -- PXC storage class name (uses cluster default when empty)
+    storageClassName: ""
+  haproxy:
+    # -- Enable HAProxy for PXC
+    enabled: true
+    # -- Number of HAProxy replicas
+    size: 2
+    image:
+      # -- HAProxy image repository
+      repository: percona/haproxy
+      # -- HAProxy image tag
+      tag: "2.8.5"
+    resources:
+      requests:
+        # -- HAProxy CPU request
+        cpu: 100m
+        # -- HAProxy memory request
+        memory: 128Mi
+      limits:
+        # -- HAProxy memory limit
+        memory: 256Mi
+  backup:
+    # -- Enable PXC scheduled backups
+    enabled: false
+    # -- Backup schedule (cron expression)
+    schedule: "0 4 * * *"
+    # -- Backup storage type (s3 or filesystem)
+    storageType: s3
+    # -- S3 bucket name for backups
+    s3Bucket: ""
+    # -- S3 credentials secret name
+    s3CredentialsSecret: ""
+    # -- S3 region
+    s3Region: "us-east-1"
+
+valkey:
+  # -- Deploy an embedded Valkey (Redis-compatible) instance
+  enabled: false
+  image:
+    # -- Valkey image repository
+    repository: valkey/valkey
+    # -- Valkey image tag
+    tag: "9.0.3"
+  # -- Number of Valkey replicas
+  replicaCount: 1
+  resources:
+    requests:
+      # -- Valkey CPU request
+      cpu: 100m
+      # -- Valkey memory request
+      memory: 128Mi
+    limits:
+      # -- Valkey memory limit
+      memory: 256Mi
+  persistence:
+    # -- Enable persistent storage for Valkey
+    enabled: false
+    # -- Valkey PVC size
+    size: 1Gi
+    # -- Valkey storage class name (uses cluster default when empty)
+    storageClassName: ""
+  service:
+    # -- Valkey service port
+    port: 6379
+
+httpRoute:
+  # -- Enable Gateway API HTTPRoute
+  enabled: true
+  # -- Hostname for the HTTPRoute
+  hostname: ""
+  # -- Gateway parentRefs (HTTPRoute is only rendered when this list is non-empty)
+  parentRefs: []
+  #   - name: my-gateway
+  #     namespace: gateway-system
+  certManager:
+    # -- Enable cert-manager Certificate for HTTPRoute TLS
+    enabled: false
+    # -- cert-manager ClusterIssuer name
+    clusterIssuer: ""
+    # -- Certificate resource name (defaults to fullname-tls)
+    certificateName: ""
+
+ingress:
+  # -- Enable classic Ingress (disabled by default; use httpRoute instead)
+  enabled: false
+  # -- Ingress class name
+  className: ""
+  # -- Ingress annotations
+  annotations: {}
+  # -- Ingress host rules
+  hosts: []
+  #   - host: fleet.example.com
+  #     paths:
+  #       - path: /
+  #         pathType: Prefix
+  # -- Ingress TLS configuration
+  tls: []
+  #   - secretName: fleet-tls
+  #     hosts:
+  #       - fleet.example.com
+
+serviceAccount:
+  # -- Create a ServiceAccount
+  create: true
+  # -- ServiceAccount annotations
+  annotations: {}
+  # -- Override the ServiceAccount name (defaults to fullname)
+  name: ""
+
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port
+  port: 8080
+
+resources:
+  requests:
+    # -- Fleet CPU request
+    cpu: 250m
+    # -- Fleet memory request
+    memory: 256Mi
+  limits:
+    # -- Fleet memory limit
+    memory: 512Mi
+
+autoscaling:
+  # -- Enable HorizontalPodAutoscaler
+  enabled: false
+  # -- Minimum number of replicas
+  minReplicas: 2
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+
+podDisruptionBudget:
+  # -- Enable PodDisruptionBudget
+  enabled: false
+  # -- Minimum number of available pods
+  minAvailable: 1
+
+# -- Node selector for Fleet pods
+nodeSelector: {}
+
+# -- Tolerations for Fleet pods
+tolerations: []
+
+# -- Affinity rules for Fleet pods
+affinity: {}

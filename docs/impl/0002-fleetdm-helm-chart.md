@@ -56,12 +56,12 @@ metadata, values, and schema that all subsequent phases build on.
 
 #### Tasks
 
-- [ ] Create `charts/fleetdm/Chart.yaml` with:
+- [x] Create `charts/fleetdm/Chart.yaml` with:
   - `apiVersion: v2`, `name: fleetdm`, `type: application`, `version: 0.1.0`
   - `appVersion: "4.82.0"` with Renovate annotation comment
   - Keywords, home URL, sources, maintainers
   - `dependencies: []` (no subcharts)
-- [ ] Create `charts/fleetdm/values.yaml` with all value sections from DESIGN-0001:
+- [x] Create `charts/fleetdm/values.yaml` with all value sections from DESIGN-0001:
   - Fleet app config (`replicaCount`, `image`, `fleet.*`)
   - Database (`database.*`)
   - Cache (`cache.*`)
@@ -72,12 +72,12 @@ metadata, values, and schema that all subsequent phases build on.
   - Standard Kubernetes (`serviceAccount`, `service`, `resources`, `autoscaling`,
     `podDisruptionBudget`, `nodeSelector`, `tolerations`, `affinity`)
   - All values annotated with `# --` comments for helm-docs
-- [ ] Create `charts/fleetdm/values.schema.json` with constraints:
+- [x] Create `charts/fleetdm/values.schema.json` with constraints:
   - `database.name`, `database.username`, `database.passwordKey` — required non-empty
   - `pxc.size` — enum `[1, 3, 5, 7]`
   - `autoscaling.targetCPUUtilizationPercentage` — integer 1–100
   - `valkey.replicaCount` — minimum 1
-- [ ] Verify `helm lint charts/fleetdm` passes with the scaffold
+- [x] Verify `helm lint charts/fleetdm` passes with the scaffold
 
 #### Success Criteria
 
