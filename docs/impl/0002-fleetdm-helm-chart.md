@@ -94,21 +94,21 @@ for every template in subsequent phases.
 
 #### Tasks
 
-- [ ] Create `charts/fleetdm/templates/_helpers.tpl` with standard helpers:
+- [x] Create `charts/fleetdm/templates/_helpers.tpl` with standard helpers:
   - `fleetdm.name` — chart name
   - `fleetdm.fullname` — release-qualified name
   - `fleetdm.chart` — chart name + version
   - `fleetdm.labels` — standard Kubernetes labels
   - `fleetdm.selectorLabels` — selector subset of labels
   - `fleetdm.serviceAccountName` — conditional SA name
-- [ ] Add custom helpers:
+- [x] Add custom helpers:
   - `fleetdm.image` — `image.repository:image.tag` falling back to `.Chart.AppVersion`
   - `fleetdm.mysqlSecretName` — `existingSecret` or chart-generated name
   - `fleetdm.redisSecretName` — `existingSecret` or chart-generated name
   - `fleetdm.pxcSecretName` — `existingSecret` or chart-generated name
   - `fleetdm.mysqlAddress` — explicit address, PXC-derived, or `fail`
   - `fleetdm.redisAddress` — explicit address, Valkey-derived, or `fail`
-- [ ] Verify `helm template fleetdm charts/fleetdm` renders without errors (will produce
+- [x] Verify `helm template fleetdm charts/fleetdm` renders without errors (will produce
   empty output since no templates consume the helpers yet, but should not fail)
 
 #### Success Criteria
