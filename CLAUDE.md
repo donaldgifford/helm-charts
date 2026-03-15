@@ -61,3 +61,14 @@ appVersion: "1.2.3" # renovate: datasource=docker depName=ghcr.io/org/app
 - Documentation managed with `docz` CLI (`.docz.yaml`); doc types: RFC, ADR, Design, Impl, Plan, Investigation
 - No library charts — duplicate shared helpers across charts
 - Forge-managed files (listed in `.forge-lock.yaml`) should not be edited directly
+
+## Charts
+
+### fleetdm
+FleetDM device management chart with PXC-backed MySQL and optional Valkey cache.
+- `existingSecret` pattern throughout — chart generates secrets by default, overridable
+- PXC `PerconaXtraDBCluster` CR (operator deployed separately, apiVersion `pxc.percona.com/v1`)
+- Gateway API `HTTPRoute` enabled by default (guarded on non-empty `parentRefs`)
+- Classic `Ingress` supported but disabled by default
+- Fleet image runs as uid=100/gid=101, `readOnlyRootFilesystem: true`
+- CI values: `ci/default-values.yaml` (minimal), `ci/ha-values.yaml` (HA config)
