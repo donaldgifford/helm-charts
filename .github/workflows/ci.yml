@@ -139,6 +139,17 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "1"
 
+  renovate-validate:
+    name: Validate Renovate Config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Renovate config
+        uses: suzuki-shunsuke/github-action-renovate-config-validator@v1
+        with:
+          config_file_path: renovate.json5
+
   chart-test:
     name: Chart Testing
     runs-on: ubuntu-latest

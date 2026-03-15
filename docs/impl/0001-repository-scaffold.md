@@ -111,12 +111,12 @@ Set up Renovate to track appVersion bumps and GitHub Actions versions.
 
 #### Tasks
 
-- [ ] Create `renovate.json5` at repo root with:
+- [x] Create `renovate.json5` at repo root with:
   - `extends: ["config:recommended"]`
   - `packageRules` for `helmv3` manager scoped to `charts/**`
   - `customManagers` regex manager for `appVersion` annotation tracking in `Chart.yaml`
   - GitHub Actions version tracking (replaces Dependabot's `github-actions` ecosystem)
-- [ ] Add `renovate-validate` job to CI workflow or as a separate workflow — validate
+- [x] Add `renovate-validate` job to CI workflow or as a separate workflow — validate
   Renovate config on PRs that touch `renovate.json5`
 
 #### Success Criteria
