@@ -1,7 +1,7 @@
 ---
 id: IMPL-0001
 title: "Repository Scaffold"
-status: Draft
+status: Complete
 author: Donald Gifford
 created: 2026-03-15
 ---
@@ -9,7 +9,7 @@ created: 2026-03-15
 
 # IMPL 0001: Repository Scaffold
 
-**Status:** Draft
+**Status:** Complete
 **Author:** Donald Gifford
 **Date:** 2026-03-15
 
@@ -133,14 +133,14 @@ Final cleanup and end-to-end validation.
 
 #### Tasks
 
-- [ ] Run `make ci` and verify it passes with no charts
-- [ ] Run `make helm-docs` and verify it completes (no-op with no charts)
-- [ ] Verify `ct lint --config ct.yaml --all` passes with no charts
-- [ ] Review all remaining forge-managed files in `.forge-lock.yaml` — confirm none
+- [x] Run `make ci` and verify it passes with no charts
+- [x] Run `make helm-docs` and verify it completes (no-op with no charts)
+- [x] Verify `ct lint --config ct.yaml --all` passes with no charts
+- [x] Review all remaining forge-managed files in `.forge-lock.yaml` — confirm none
   reference deleted files or broken paths
-- [ ] Update `CLAUDE.md` to reflect the cleaned-up repo (remove Go commands section, update
+- [x] Update `CLAUDE.md` to reflect the cleaned-up repo (remove Go commands section, update
   CI pipeline description)
-- [ ] Update repo `README.md` with Helm repo usage instructions (`helm repo add ...`)
+- [x] Update repo `README.md` with Helm repo usage instructions (`helm repo add ...`)
 
 #### Success Criteria
 
@@ -170,9 +170,9 @@ Final cleanup and end-to-end validation.
 
 ## Testing Plan
 
-- [ ] `make ci` passes with no charts present
-- [ ] `make helm-lint` / `make helm-unittest` skip gracefully with no charts
-- [ ] `ct lint --config ct.yaml --all` exits 0 with no charts
+- [x] `make ci` passes with no charts present
+- [x] `make helm-lint` / `make helm-unittest` skip gracefully with no charts
+- [x] `ct lint --config ct.yaml --all` exits 0 with no charts
 - [ ] Push a test PR to verify CI workflow triggers and all jobs pass
 - [ ] `renovate-config-validator` passes on `renovate.json5`
 

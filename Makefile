@@ -15,6 +15,7 @@ VERSION     ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo 
 ## Helm Variables
 
 CHART_DIR := charts
+CHARTS    := $(wildcard $(CHART_DIR)/*/Chart.yaml)
 
 
 ###############
@@ -26,34 +27,39 @@ CHART_DIR := charts
 
 helm-lint: ## Lint all charts
 	@ $(MAKE) --no-print-directory log-$@
-	@helm lint $(CHART_DIR)/*
+	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
+	else helm lint $(CHART_DIR)/*; fi
 
 helm-template: ## Render Helm templates with default values
 	@ $(MAKE) --no-print-directory log-$@
-	@for chart in $(CHART_DIR)/*/; do \
+	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
+	else for chart in $(CHART_DIR)/*/; do \
 		echo "--- $${chart} ---"; \
 		helm template $$(basename $${chart}) $${chart}; \
-	done
+	done; fi
 
 helm-template-ci: ## Render Helm templates with CI values
 	@ $(MAKE) --no-print-directory log-$@
-	@for chart in $(CHART_DIR)/*/; do \
+	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
+	else for chart in $(CHART_DIR)/*/; do \
 		for vals in $${chart}ci/*.yaml; do \
 			[ -f "$${vals}" ] || continue; \
 			echo "--- $${chart} ($${vals}) ---"; \
 			helm template $$(basename $${chart}) $${chart} -f $${vals}; \
 		done; \
-	done
+	done; fi
 
 helm-package: ## Package all charts to .tgz
 	@ $(MAKE) --no-print-directory log-$@
-	@for chart in $(CHART_DIR)/*/; do \
+	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
+	else for chart in $(CHART_DIR)/*/; do \
 		helm package $${chart}; \
-	done
+	done; fi
 
 helm-unittest: ## Run helm-unittest plugin tests
 	@ $(MAKE) --no-print-directory log-$@
-	@helm unittest $(CHART_DIR)/*
+	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
+	else helm unittest $(CHART_DIR)/*; fi
 
 helm-test: helm-lint helm-unittest ## Run Helm lint + unit tests
 
@@ -75,8 +81,12 @@ helm-docs: ## Generate chart READMEs with helm-docs
 
 helm-docs-check: ## Check that helm-docs are up to date
 	@ $(MAKE) --no-print-directory log-$@
-	@helm-docs --chart-search-root $(CHART_DIR) --dry-run | diff - /dev/null || \
-		(echo "helm-docs are out of date — run 'make helm-docs'" && exit 1)
+	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
+	else helm-docs --chart-search-root $(CHART_DIR) && \
+		if ! git diff --quiet; then \
+			echo "helm-docs are out of date — run 'make helm-docs'" && exit 1; \
+		fi; \
+	fi
 
 helm-diff-check: ## Show diff between installed release and local chart (RELEASE= CHART=)
 	@ $(MAKE) --no-print-directory log-$@
@@ -88,9 +98,10 @@ helm-diff-check: ## Show diff between installed release and local chart (RELEASE
 
 helm-cr-package: ## Package charts with chart-releaser
 	@ $(MAKE) --no-print-directory log-$@
-	@for chart in $(CHART_DIR)/*/; do \
+	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
+	else for chart in $(CHART_DIR)/*/; do \
 		cr package $${chart}; \
-	done
+	done; fi
 
 ##@ CI
 
