@@ -173,36 +173,36 @@ Implement PXC cluster CR, Valkey StatefulSet, HTTPRoute, Ingress, HPA, and PDB.
 
 #### Tasks
 
-- [ ] Create `charts/fleetdm/templates/pxc-cluster.yaml`:
+- [x] Create `charts/fleetdm/templates/pxc-cluster.yaml`:
   - `PerconaXtraDBCluster` CR gated on `pxc.enabled`
   - ArgoCD `ServerSideApply=true` annotation
   - `secretsName` from `fleetdm.pxcSecretName`
   - PXC node config: `size`, `image`, `resources`, `storage`
   - HAProxy config: `enabled`, `size`, `resources`
   - Backup config: conditional on `pxc.backup.enabled`
-- [ ] Create `charts/fleetdm/templates/valkey.yaml`:
+- [x] Create `charts/fleetdm/templates/valkey.yaml`:
   - StatefulSet + headless Service gated on `valkey.enabled`
   - Persistence: PVC when `valkey.persistence.enabled`, emptyDir otherwise
   - Password support: `--requirepass` when `cache.usePassword: true`
   - Resource requests/limits from values
-- [ ] Create `charts/fleetdm/templates/httproute.yaml`:
+- [x] Create `charts/fleetdm/templates/httproute.yaml`:
   - `gateway.networking.k8s.io/v1 HTTPRoute` gated on `httpRoute.enabled`
   - `cert-manager.io/v1 Certificate` gated on `httpRoute.certManager.enabled`
   - `parentRefs` taken verbatim from values
   - Hostname from `httpRoute.hostname`
-- [ ] Create `charts/fleetdm/templates/ingress.yaml`:
+- [x] Create `charts/fleetdm/templates/ingress.yaml`:
   - `networking.k8s.io/v1 Ingress` gated on `ingress.enabled`
   - `ingressClassName` from `ingress.className`
   - Annotations, hosts, TLS from values
-- [ ] Create `charts/fleetdm/templates/hpa.yaml`:
+- [x] Create `charts/fleetdm/templates/hpa.yaml`:
   - `HorizontalPodAutoscaler` gated on `autoscaling.enabled`
   - `minReplicas`, `maxReplicas`, `targetCPUUtilizationPercentage` from values
-- [ ] Create `charts/fleetdm/templates/pdb.yaml`:
+- [x] Create `charts/fleetdm/templates/pdb.yaml`:
   - `PodDisruptionBudget` gated on `podDisruptionBudget.enabled`
   - `minAvailable` from values
-- [ ] Verify `helm template fleetdm charts/fleetdm` renders all resources with various
+- [x] Verify `helm template fleetdm charts/fleetdm` renders all resources with various
   value combinations (PXC on/off, Valkey on/off, HTTPRoute on/off, Ingress on/off)
-- [ ] Run `make helm-lint` to validate
+- [x] Run `make helm-lint` to validate
 
 #### Success Criteria
 
