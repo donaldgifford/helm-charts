@@ -1,7 +1,7 @@
 ---
 id: IMPL-0002
 title: "FleetDM Helm Chart"
-status: Draft
+status: Accepted
 author: Donald Gifford
 created: 2026-03-15
 ---
@@ -9,7 +9,7 @@ created: 2026-03-15
 
 # IMPL 0002: FleetDM Helm Chart
 
-**Status:** Draft
+**Status:** Accepted
 **Author:** Donald Gifford
 **Date:** 2026-03-15
 
@@ -436,29 +436,43 @@ Write CI test values and validate the full chart with lint and local install tes
 - IMPL-0001 (Repository Scaffold) must be complete — provides CI workflow, Makefile, ct.yaml
 - helm-unittest plugin installed (`helm plugin install https://github.com/helm-unittest/helm-unittest`)
 
-## Open Questions
+## Resolved Questions
 
-- **Fleet env var names:** The design doc references env vars like `FLEET_MYSQL_ADDRESS`,
-  `FLEET_REDIS_ADDRESS`, etc. These need to be verified against the Fleet 4.82.0 source to
-  ensure correctness. The upstream Fleet docs or `fleet serve --help` output should be the
-  source of truth for env var names and any additional required vars.
-- **PXC CR API version:** The design references `PerconaXtraDBCluster` but does not specify
-  the `apiVersion`. PXC operator v1.19.0 uses `pxc.percona.com/v1`. This needs to be
-  confirmed against the target operator version.
-- **Valkey image tag:** The design uses `7.2` but the latest Valkey stable may be newer.
-  Should we pin the latest stable at chart creation time and let Renovate handle updates?
-- **HTTPRoute enabled by default:** DESIGN-0001 says HTTPRoute is enabled by default, but
-  the FLEETMD.md source has `httpRoute.enabled: false`. The design doc decision takes
-  precedence, but this means `helm install` with zero value overrides will require Gateway
-  API CRDs. Should `httpRoute.parentRefs` default to empty list to avoid rendering an
-  invalid HTTPRoute, or should the template `fail` if parentRefs is empty?
-- **Security context UID/GID:** The design specifies `runAsNonRoot: true` and
-  `readOnlyRootFilesystem: true` but does not specify `runAsUser`/`runAsGroup`. The Fleet
-  container image may expect a specific UID. Needs verification against the `fleetdm/fleet`
-  Docker image.
-- **Database connection pool env vars:** The design includes `maxOpenConns`, `maxIdleConns`,
-  `connMaxLifetime` in values but doesn't map them to Fleet env vars in the deployment
-  template. Need to verify the exact Fleet env var names for these settings.
+- **Fleet env var names:** Verified from the upstream FleetDM Helm chart deployment template.
+  All env var names confirmed:
+  - MySQL: `FLEET_MYSQL_ADDRESS`, `FLEET_MYSQL_DATABASE`, `FLEET_MYSQL_USERNAME`,
+    `FLEET_MYSQL_PASSWORD`
+  - Redis: `FLEET_REDIS_ADDRESS`, `FLEET_REDIS_PASSWORD`, `FLEET_REDIS_DATABASE`
+  - Server: `FLEET_SERVER_ADDRESS` (`0.0.0.0:<port>`), `FLEET_SERVER_TLS`
+  - Logging: `FLEET_LOGGING_DEBUG`, `FLEET_LOGGING_JSON`, `FLEET_LOGGING_DISABLE_BANNER`
+  - Auth: `FLEET_AUTH_BCRYPT_COST`, `FLEET_AUTH_SALT_KEY_SIZE`
+  - License: `FLEET_LICENSE_KEY`
+  - Vulnerabilities: `FLEET_VULNERABILITIES_DATABASES_PATH` (`/tmp/vuln`)
+  - Sessions: `FLEET_SESSION_KEY_SIZE`, `FLEET_SESSION_DURATION`
+  - App tokens: `FLEET_APP_TOKEN_KEY_SIZE`, `FLEET_APP_TOKEN_VALIDITY_PERIOD`
+
+- **PXC CR API version:** Confirmed `pxc.percona.com/v1` from the Percona XtraDB Cluster
+  Operator repository. This is the stable API version used by PXC Operator v1.13+.
+
+- **Valkey image tag:** Latest stable Valkey is `9.0.3`. Pin this at chart creation time;
+  Renovate will handle future updates via the appVersion annotation pattern.
+
+- **HTTPRoute enabled by default:** HTTPRoute is enabled by default per DESIGN-0001. The
+  template will guard on `httpRoute.parentRefs` being non-empty — if `parentRefs` is an
+  empty list, the HTTPRoute resource is not rendered even if `httpRoute.enabled: true`. This
+  means a zero-config `helm install` will not render an invalid HTTPRoute and will not
+  require Gateway API CRDs. Users must set at least one `parentRef` to activate the route.
+  This is the safest default that still honors the "enabled by default" design decision.
+
+- **Security context UID/GID:** The `fleetdm/fleet` Docker image runs as
+  `uid=100(fleet) gid=101(fleet)`. The chart sets `runAsUser: 100`, `runAsGroup: 101`,
+  `runAsNonRoot: true`, `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`,
+  `capabilities.drop: [ALL]`.
+
+- **Database connection pool env vars:** Verified from the upstream chart:
+  - `FLEET_MYSQL_MAX_OPEN_CONNS` — maps to `database.maxOpenConns`
+  - `FLEET_MYSQL_MAX_IDLE_CONNS` — maps to `database.maxIdleConns`
+  - `FLEET_MYSQL_CONN_MAX_LIFETIME` — maps to `database.connMaxLifetime`
 
 ## References
 
