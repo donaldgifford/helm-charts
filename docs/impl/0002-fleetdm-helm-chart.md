@@ -1,7 +1,7 @@
 ---
 id: IMPL-0002
 title: "FleetDM Helm Chart"
-status: Accepted
+status: Complete
 author: Donald Gifford
 created: 2026-03-15
 ---
@@ -349,14 +349,14 @@ Write CI test values and validate the full chart with lint and local install tes
 
 #### Tasks
 
-- [ ] Create `charts/fleetdm/ci/default-values.yaml`:
+- [x] Create `charts/fleetdm/ci/default-values.yaml`:
   - PXC disabled, Valkey disabled
   - Stub `database.address` and `database.existingSecret`
   - Stub `cache.address`
   - HTTPRoute disabled (Gateway API CRDs not in Kind by default)
   - Ingress disabled
   - Minimal resource config for Kind
-- [ ] Create `charts/fleetdm/ci/ha-values.yaml`:
+- [x] Create `charts/fleetdm/ci/ha-values.yaml`:
   - PXC disabled (no operator in Kind)
   - Valkey enabled with persistence disabled
   - Stub `database.address` and `database.existingSecret`
@@ -364,11 +364,11 @@ Write CI test values and validate the full chart with lint and local install tes
   - PDB enabled
   - HTTPRoute disabled (no Gateway API CRDs in Kind)
   - Ingress enabled to exercise that code path
-- [ ] Run `make helm-lint` and verify it passes
-- [ ] Run `make helm-unittest` and verify all tests pass
-- [ ] Run `make helm-ct-lint` and verify it passes
-- [ ] Run `make helm-docs-check` and verify it passes
-- [ ] Run `make helm-template-ci` and verify all CI value combinations render cleanly
+- [x] Run `make helm-lint` and verify it passes
+- [x] Run `make helm-unittest` and verify all tests pass
+- [x] Run `make helm-ct-lint` and verify it passes
+- [x] Run `make helm-docs-check` and verify it passes
+- [x] Run `make helm-template-ci` and verify all CI value combinations render cleanly
 
 #### Success Criteria
 
@@ -419,16 +419,16 @@ Write CI test values and validate the full chart with lint and local install tes
 
 ## Testing Plan
 
-- [ ] `make helm-lint` passes
-- [ ] `make helm-unittest` passes with all tests green
-- [ ] `make helm-ct-lint` passes
-- [ ] `make helm-docs-check` passes (no stale docs)
-- [ ] `make helm-template` renders all resources with default values
-- [ ] `make helm-template-ci` renders cleanly for both CI values files
-- [ ] `make ci` passes end-to-end
-- [ ] `helm template` with `pxc.enabled=false` + empty `database.address` produces a clear
+- [x] `make helm-lint` passes
+- [x] `make helm-unittest` passes with all tests green
+- [x] `make helm-ct-lint` passes
+- [x] `make helm-docs-check` passes (no stale docs)
+- [x] `make helm-template` renders all resources with default values
+- [x] `make helm-template-ci` renders cleanly for both CI values files
+- [x] `make ci` passes end-to-end
+- [x] `helm template` with `pxc.enabled=false` + empty `database.address` produces a clear
   `fail` error message
-- [ ] `helm template` with `valkey.enabled=false` + empty `cache.address` produces a clear
+- [x] `helm template` with `valkey.enabled=false` + empty `cache.address` produces a clear
   `fail` error message
 
 ## Dependencies

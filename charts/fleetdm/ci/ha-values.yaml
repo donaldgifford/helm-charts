@@ -1,0 +1,46 @@
+---
+# CI test values: HA configuration with Valkey, autoscaling, PDB, Ingress
+# PXC disabled (no operator in Kind), HTTPRoute disabled (no Gateway API CRDs)
+pxc:
+  enabled: false
+
+valkey:
+  enabled: true
+  persistence:
+    enabled: false
+
+database:
+  address: "mysql-stub:3306"
+  existingSecret: fleet-mysql-stub
+
+cache:
+  usePassword: true
+
+httpRoute:
+  enabled: false
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: fleet.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi

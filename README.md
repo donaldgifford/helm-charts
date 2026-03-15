@@ -15,7 +15,7 @@ helm search repo donaldgifford
 
 | Chart | Description |
 |-------|-------------|
-| *coming soon* | |
+| [fleetdm](charts/fleetdm/) | FleetDM — open-source device management with PXC-backed MySQL and optional Valkey cache |
 
 ## Development
 
