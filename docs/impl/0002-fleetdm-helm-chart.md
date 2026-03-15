@@ -126,17 +126,17 @@ deployment, and service.
 
 #### Tasks
 
-- [ ] Create `charts/fleetdm/templates/secret.yaml`:
+- [x] Create `charts/fleetdm/templates/secret.yaml`:
   - MySQL secret (conditional on `database.existingSecret` being empty)
   - PXC credentials secret (conditional on `pxc.existingSecret` being empty, gated on
     `pxc.enabled`)
   - Redis/Valkey secret (conditional on `cache.usePassword` + `cache.existingSecret` empty)
   - All use `helm.sh/resource-policy: keep` annotation
   - All use `randAlphaNum 32 | b64enc` for generated passwords
-- [ ] Create `charts/fleetdm/templates/serviceaccount.yaml`:
+- [x] Create `charts/fleetdm/templates/serviceaccount.yaml`:
   - Conditional on `serviceAccount.create`
   - Supports `serviceAccount.annotations`
-- [ ] Create `charts/fleetdm/templates/deployment.yaml`:
+- [x] Create `charts/fleetdm/templates/deployment.yaml`:
   - Replicas from `replicaCount` (omit when `autoscaling.enabled`)
   - Image from `fleetdm.image` helper
   - All Fleet env vars wired via helper functions (MySQL address/password, Redis
@@ -147,16 +147,16 @@ deployment, and service.
   - Resource requests/limits from values
   - `nodeSelector`, `tolerations`, `affinity` from values
   - `imagePullSecrets` support
-- [ ] Create `charts/fleetdm/templates/service.yaml`:
+- [x] Create `charts/fleetdm/templates/service.yaml`:
   - `ClusterIP` by default
   - Port from `service.port`
   - Selector labels from helper
-- [ ] Create `charts/fleetdm/templates/NOTES.txt`:
+- [x] Create `charts/fleetdm/templates/NOTES.txt`:
   - Print access URL based on service type
   - Print reminder about PXC operator if `pxc.enabled`
   - Print `helm test` instructions
-- [ ] Verify `helm template fleetdm charts/fleetdm` renders all core resources
-- [ ] Run `make helm-lint` to validate
+- [x] Verify `helm template fleetdm charts/fleetdm` renders all core resources
+- [x] Run `make helm-lint` to validate
 
 #### Success Criteria
 
