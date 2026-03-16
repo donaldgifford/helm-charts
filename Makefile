@@ -83,7 +83,7 @@ helm-docs-check: ## Check that helm-docs are up to date
 	@ $(MAKE) --no-print-directory log-$@
 	@if [ -z "$(CHARTS)" ]; then echo "No charts found, skipping"; \
 	else helm-docs --chart-search-root $(CHART_DIR) && \
-		if ! git diff --quiet; then \
+		if ! git diff --quiet -- $(CHART_DIR); then \
 			echo "helm-docs are out of date — run 'make helm-docs'" && exit 1; \
 		fi; \
 	fi

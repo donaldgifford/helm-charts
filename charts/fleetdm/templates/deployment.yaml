@@ -1,0 +1,157 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fleetdm.fullname" . }}
+  labels:
+    {{- include "fleetdm.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fleetdm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fleetdm.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "fleetdm.serviceAccountName" . }}
+      securityContext:
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+      containers:
+        - name: fleet
+          image: {{ include "fleetdm.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [fleet, serve]
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              {{- if .Values.fleet.tls.enabled }}
+              scheme: HTTPS
+              {{- end }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              {{- if .Values.fleet.tls.enabled }}
+              scheme: HTTPS
+              {{- end }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          env:
+            # Server config
+            - name: FLEET_SERVER_ADDRESS
+              value: "0.0.0.0:{{ .Values.service.port }}"
+            - name: FLEET_SERVER_TLS
+              value: {{ .Values.fleet.tls.enabled | quote }}
+            {{- if .Values.fleet.serverURL }}
+            - name: FLEET_SERVER_URL
+              value: {{ .Values.fleet.serverURL | quote }}
+            {{- end }}
+            # Logging
+            - name: FLEET_LOGGING_DEBUG
+              value: {{ .Values.fleet.logging.debug | quote }}
+            - name: FLEET_LOGGING_JSON
+              value: {{ .Values.fleet.logging.json | quote }}
+            - name: FLEET_LOGGING_DISABLE_BANNER
+              value: {{ .Values.fleet.logging.disableBanner | quote }}
+            # MySQL
+            - name: FLEET_MYSQL_ADDRESS
+              value: {{ include "fleetdm.mysqlAddress" . | quote }}
+            - name: FLEET_MYSQL_DATABASE
+              value: {{ .Values.database.name | quote }}
+            - name: FLEET_MYSQL_USERNAME
+              value: {{ .Values.database.username | quote }}
+            - name: FLEET_MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fleetdm.mysqlSecretName" . }}
+                  key: {{ .Values.database.passwordKey }}
+            - name: FLEET_MYSQL_MAX_OPEN_CONNS
+              value: {{ .Values.database.maxOpenConns | quote }}
+            - name: FLEET_MYSQL_MAX_IDLE_CONNS
+              value: {{ .Values.database.maxIdleConns | quote }}
+            - name: FLEET_MYSQL_CONN_MAX_LIFETIME
+              value: {{ .Values.database.connMaxLifetime | quote }}
+            # Redis/Cache
+            - name: FLEET_REDIS_ADDRESS
+              value: {{ include "fleetdm.redisAddress" . | quote }}
+            {{- if .Values.cache.usePassword }}
+            - name: FLEET_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fleetdm.redisSecretName" . }}
+                  key: {{ .Values.cache.passwordKey }}
+            {{- end }}
+            - name: FLEET_REDIS_DATABASE
+              value: {{ .Values.cache.database | quote }}
+            # Auth
+            - name: FLEET_AUTH_BCRYPT_COST
+              value: {{ .Values.fleet.auth.bcryptCost | quote }}
+            - name: FLEET_AUTH_SALT_KEY_SIZE
+              value: {{ .Values.fleet.auth.saltKeySize | quote }}
+            # Sessions
+            - name: FLEET_SESSION_KEY_SIZE
+              value: {{ .Values.fleet.session.keySize | quote }}
+            - name: FLEET_SESSION_DURATION
+              value: {{ .Values.fleet.session.duration | quote }}
+            # App tokens
+            - name: FLEET_APP_TOKEN_KEY_SIZE
+              value: {{ .Values.fleet.appToken.keySize | quote }}
+            - name: FLEET_APP_TOKEN_VALIDITY_PERIOD
+              value: {{ .Values.fleet.appToken.validityPeriod | quote }}
+            # Vulnerabilities
+            - name: FLEET_VULNERABILITIES_DATABASES_PATH
+              value: {{ .Values.fleet.vulnerabilities.databasesPath | quote }}
+            # License
+            {{- if .Values.fleet.license.secretName }}
+            - name: FLEET_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.fleet.license.secretName }}
+                  key: {{ .Values.fleet.license.secretKey }}
+            {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -44,9 +44,10 @@ Chart releases are triggered manually via `workflow_dispatch` on `chart-release.
 
 ## Version Tracking
 
-Renovate (`renovate.json5`) tracks `appVersion` in `Chart.yaml` via regex custom manager. Each chart annotates its appVersion:
+Renovate (`renovate.json5`) tracks `appVersion` in `Chart.yaml` via regex custom manager. Each chart annotates its appVersion with a comment on the line above:
 ```yaml
-appVersion: "1.2.3" # renovate: datasource=docker depName=ghcr.io/org/app
+# renovate: image=fleetdm/fleet
+appVersion: "4.82.0"
 ```
 
 ## Chart Testing Config
@@ -59,5 +60,21 @@ appVersion: "1.2.3" # renovate: datasource=docker depName=ghcr.io/org/app
 - Helm chart unit tests use the `helm-unittest` plugin
 - Conventional commits scoped per chart: `chart(fleetdm): bump appVersion to 1.2.3`
 - Documentation managed with `docz` CLI (`.docz.yaml`); doc types: RFC, ADR, Design, Impl, Plan, Investigation
+- `values.schema.json` for input validation (required fields, enum constraints)
+- `Chart.yaml` and `values.yaml` must start with `---` (yamllint `document-start: present`)
 - No library charts — duplicate shared helpers across charts
 - Forge-managed files (listed in `.forge-lock.yaml`) should not be edited directly
+
+## Charts
+
+### fleetdm
+FleetDM device management chart with PXC-backed MySQL and optional Valkey cache.
+- `existingSecret` pattern throughout — chart generates secrets by default, overridable
+- PXC `PerconaXtraDBCluster` CR (operator deployed separately, apiVersion `pxc.percona.com/v1`)
+- Gateway API `HTTPRoute` enabled by default (guarded on non-empty `parentRefs`)
+- Classic `Ingress` supported but disabled by default
+- Fleet image runs as uid=100/gid=101, `readOnlyRootFilesystem: true`
+- Helper `fail` pattern: `mysqlAddress` and `redisAddress` fail with actionable messages when neither address nor embedded service is configured
+- 10 unit test suites (69 tests) in `charts/fleetdm/tests/`
+- CI values: `ci/default-values.yaml` (minimal), `ci/ha-values.yaml` (HA config)
+- Generated secrets use `helm.sh/resource-policy: keep` to survive upgrades

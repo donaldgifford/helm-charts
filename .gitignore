@@ -2,6 +2,7 @@
 *.tgz
 .cr-release-packages/
 .cr-index/
+charts/*/Chart.lock
 
 # env file
 .env

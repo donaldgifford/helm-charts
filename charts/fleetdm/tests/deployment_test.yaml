@@ -1,0 +1,219 @@
+---
+suite: deployment
+templates:
+  - templates/deployment.yaml
+set:
+  cache:
+    address: "redis:6379"
+tests:
+  - it: renders a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: sets replicas from replicaCount
+    set:
+      replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: omits replicas when autoscaling is enabled
+    set:
+      autoscaling:
+        enabled: true
+    asserts:
+      - isNull:
+          path: spec.replicas
+
+  - it: uses appVersion as default image tag
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "fleetdm/fleet:4\\.82\\.0"
+
+  - it: uses explicit image tag when set
+    set:
+      image:
+        tag: "4.80.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "fleetdm/fleet:4.80.0"
+
+  - it: sets FLEET_MYSQL_ADDRESS from PXC derivation
+    set:
+      pxc:
+        enabled: true
+        clusterName: fleet-pxc
+      database:
+        address: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_MYSQL_ADDRESS
+            value: "fleet-pxc-haproxy.NAMESPACE:3306"
+
+  - it: sets FLEET_MYSQL_ADDRESS from explicit address
+    set:
+      pxc:
+        enabled: false
+      database:
+        address: "mysql.db:3306"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_MYSQL_ADDRESS
+            value: "mysql.db:3306"
+
+  - it: references generated MySQL secret by default
+    set:
+      database:
+        existingSecret: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-fleetdm-mysql
+                key: mysql-password
+
+  - it: references existingSecret for MySQL when set
+    set:
+      database:
+        existingSecret: my-mysql-secret
+        passwordKey: my-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-mysql-secret
+                key: my-key
+
+  - it: includes FLEET_REDIS_PASSWORD when cache.usePassword is true
+    set:
+      cache:
+        usePassword: true
+        address: "redis:6379"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_REDIS_PASSWORD
+          any: true
+
+  - it: omits FLEET_REDIS_PASSWORD when cache.usePassword is false
+    set:
+      cache:
+        usePassword: false
+        address: "redis:6379"
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_REDIS_PASSWORD
+          any: true
+
+  - it: omits FLEET_LICENSE_KEY when license is not configured
+    set:
+      fleet:
+        license:
+          secretName: ""
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_LICENSE_KEY
+          any: true
+
+  - it: includes FLEET_LICENSE_KEY when license secret is set
+    set:
+      fleet:
+        license:
+          secretName: fleet-license
+          secretKey: license-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_LICENSE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: fleet-license
+                key: license-key
+
+  - it: mounts tmp emptyDir volume
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: tmp
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: tmp
+            mountPath: /tmp
+
+  - it: sets security context
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+
+  - it: sets pod security context with Fleet UID/GID
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 100
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 101
+
+  - it: sets database connection pool env vars
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_MYSQL_MAX_OPEN_CONNS
+            value: "50"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_MYSQL_MAX_IDLE_CONNS
+            value: "50"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_MYSQL_CONN_MAX_LIFETIME
+            value: "0"
+
+  - it: sets resource requests and limits
+    set:
+      resources:
+        requests:
+          cpu: 500m
+          memory: 512Mi
+        limits:
+          memory: 1Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 1Gi

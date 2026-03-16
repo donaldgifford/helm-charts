@@ -1,0 +1,29 @@
+---
+# CI test values: minimal install with external MySQL/Redis stubs
+# PXC disabled, Valkey disabled, no Gateway API or Ingress
+pxc:
+  enabled: false
+
+valkey:
+  enabled: false
+
+database:
+  address: "mysql-stub:3306"
+  existingSecret: fleet-mysql-stub
+
+cache:
+  address: "redis-stub:6379"
+  usePassword: false
+
+httpRoute:
+  enabled: false
+
+ingress:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 256Mi

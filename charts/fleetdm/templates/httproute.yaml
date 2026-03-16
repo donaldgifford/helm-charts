@@ -1,0 +1,36 @@
+{{- if and .Values.httpRoute.enabled (gt (len .Values.httpRoute.parentRefs) 0) }}
+{{- if .Values.httpRoute.certManager.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ default (printf "%s-tls" (include "fleetdm.fullname" .)) .Values.httpRoute.certManager.certificateName }}
+  labels:
+    {{- include "fleetdm.labels" . | nindent 4 }}
+spec:
+  secretName: {{ default (printf "%s-tls" (include "fleetdm.fullname" .)) .Values.httpRoute.certManager.certificateName }}
+  issuerRef:
+    name: {{ .Values.httpRoute.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ .Values.httpRoute.hostname | quote }}
+{{- end }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "fleetdm.fullname" . }}
+  labels:
+    {{- include "fleetdm.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    {{- toYaml .Values.httpRoute.parentRefs | nindent 4 }}
+  {{- if .Values.httpRoute.hostname }}
+  hostnames:
+    - {{ .Values.httpRoute.hostname | quote }}
+  {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ include "fleetdm.fullname" . }}
+          port: {{ .Values.service.port }}
+{{- end }}

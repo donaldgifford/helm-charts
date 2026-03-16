@@ -33,5 +33,5 @@ docz create rfc "Your RFC Title"
 
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
-| RFC-0001 | Helm Charts Repository Layout and Conventions | Draft | 2026-03-15 | Donald Gifford | [0001-helm-charts-repository-layout-and-conventions.md](0001-helm-charts-repository-layout-and-conventions.md) |
+| RFC-0001 | Helm Charts Repository Layout and Conventions | Accepted | 2026-03-15 | Donald Gifford | [0001-helm-charts-repository-layout-and-conventions.md](0001-helm-charts-repository-layout-and-conventions.md) |
 <!-- END DOCZ AUTO-GENERATED -->

@@ -1,0 +1,83 @@
+---
+suite: httproute
+templates:
+  - templates/httproute.yaml
+tests:
+  - it: does not render when httpRoute.enabled is false
+    set:
+      httpRoute:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when parentRefs is empty
+    set:
+      httpRoute:
+        enabled: true
+        parentRefs: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders HTTPRoute only when certManager is disabled
+    set:
+      httpRoute:
+        enabled: true
+        hostname: fleet.example.com
+        parentRefs:
+          - name: my-gateway
+        certManager:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: HTTPRoute
+
+  - it: renders Certificate and HTTPRoute when certManager is enabled
+    set:
+      httpRoute:
+        enabled: true
+        hostname: fleet.example.com
+        parentRefs:
+          - name: my-gateway
+        certManager:
+          enabled: true
+          clusterIssuer: letsencrypt
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: Certificate
+        documentIndex: 0
+      - isKind:
+          of: HTTPRoute
+        documentIndex: 1
+
+  - it: sets hostname in HTTPRoute
+    set:
+      httpRoute:
+        enabled: true
+        hostname: fleet.example.com
+        parentRefs:
+          - name: my-gateway
+    asserts:
+      - equal:
+          path: spec.hostnames[0]
+          value: fleet.example.com
+
+  - it: sets parentRefs from values
+    set:
+      httpRoute:
+        enabled: true
+        parentRefs:
+          - name: my-gateway
+            namespace: gateway-system
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: my-gateway
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: gateway-system

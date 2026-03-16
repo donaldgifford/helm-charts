@@ -32,5 +32,5 @@ docz create design "Your Design Title"
 
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
-| DESIGN-0001 | FleetDM Helm Chart | Draft | 2026-03-15 | Donald Gifford | [0001-fleetdm-helm-chart.md](0001-fleetdm-helm-chart.md) |
+| DESIGN-0001 | FleetDM Helm Chart | Implemented | 2026-03-15 | Donald Gifford | [0001-fleetdm-helm-chart.md](0001-fleetdm-helm-chart.md) |
 <!-- END DOCZ AUTO-GENERATED -->

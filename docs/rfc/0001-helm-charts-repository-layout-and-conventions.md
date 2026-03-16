@@ -1,7 +1,7 @@
 ---
 id: RFC-0001
 title: "Helm Charts Repository Layout and Conventions"
-status: Draft
+status: Accepted
 author: Donald Gifford
 created: 2026-03-15
 ---
@@ -9,7 +9,7 @@ created: 2026-03-15
 
 # RFC 0001: Helm Charts Repository Layout and Conventions
 
-**Status:** Draft
+**Status:** Accepted
 **Author:** Donald Gifford
 **Date:** 2026-03-15
 

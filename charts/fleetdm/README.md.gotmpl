@@ -1,0 +1,67 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+## Prerequisites
+
+| Dependency | Required Version | Required |
+|------------|-----------------|----------|
+| Kubernetes | 1.25+ | Yes |
+| Helm | 3.10+ | Yes |
+| PXC Operator | 1.13+ | When `pxc.enabled: true` |
+| Gateway API CRDs | v1 | When `httpRoute.enabled: true` with `parentRefs` set |
+| cert-manager | v1.12+ | When `httpRoute.certManager.enabled: true` |
+
+## Installation
+
+```sh
+helm repo add donaldgifford https://donaldgifford.github.io/helm-charts
+helm repo update
+
+# Minimal install with external MySQL and Redis
+helm install fleet donaldgifford/fleetdm \
+  --set pxc.enabled=false \
+  --set database.address=mysql:3306 \
+  --set database.existingSecret=my-mysql-secret \
+  --set cache.address=redis:6379
+
+# Install with PXC cluster and embedded Valkey
+helm install fleet donaldgifford/fleetdm \
+  --set valkey.enabled=true
+```
+
+## Secret Management
+
+The chart generates random credentials by default. Generated secrets use
+`helm.sh/resource-policy: keep` to survive Helm upgrades.
+
+To use externally managed secrets (1Password Connect, External Secrets Operator):
+
+```yaml
+database:
+  existingSecret: fleet-mysql-credentials
+  passwordKey: mysql-password
+
+cache:
+  existingSecret: fleet-redis-credentials
+  passwordKey: redis-password
+
+pxc:
+  existingSecret: fleet-pxc-credentials
+```
+
+## Post-Install Validation
+
+```sh
+helm test fleet -n <namespace>
+```
+
+This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "chart.maintainersSection" . }}

@@ -1,0 +1,24 @@
+Fleet has been deployed!
+
+{{- if .Values.pxc.enabled }}
+
+NOTE: PXC cluster "{{ .Values.pxc.clusterName }}" will be created.
+  The Percona XtraDB Cluster Operator must be installed and watching
+  namespace "{{ .Release.Namespace }}" for the cluster to become ready.
+
+  Check PXC status:
+    kubectl get pxc {{ .Values.pxc.clusterName }} -n {{ .Release.Namespace }}
+{{- end }}
+
+Get the Fleet URL:
+{{- if and .Values.httpRoute.enabled .Values.httpRoute.hostname (gt (len .Values.httpRoute.parentRefs) 0) }}
+  https://{{ .Values.httpRoute.hostname }}
+{{- else if .Values.ingress.enabled }}
+  Check your ingress configuration for the external URL.
+{{- else }}
+  kubectl port-forward svc/{{ include "fleetdm.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+  http://localhost:{{ .Values.service.port }}
+{{- end }}
+
+Run the test suite:
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "fleetdm.fullname" . }}-test-health
+  labels:
+    {{- include "fleetdm.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+  containers:
+    - name: health-test
+      image: curlimages/curl:latest
+      securityContext:
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      command:
+        - sh
+        - -c
+        - |
+          {{- if .Values.fleet.tls.enabled }}
+          curl -sf --max-time 10 https://{{ include "fleetdm.fullname" . }}:{{ .Values.service.port }}/healthz
+          {{- else }}
+          curl -sf --max-time 10 http://{{ include "fleetdm.fullname" . }}:{{ .Values.service.port }}/healthz
+          {{- end }}
