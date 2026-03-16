@@ -9,7 +9,7 @@ created: 2026-03-15
 
 # IMPL 0002: FleetDM Helm Chart
 
-**Status:** Accepted
+**Status:** Complete
 **Author:** Donald Gifford
 **Date:** 2026-03-15
 

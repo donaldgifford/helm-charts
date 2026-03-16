@@ -1,7 +1,7 @@
 ---
 id: DESIGN-0001
 title: "FleetDM Helm Chart"
-status: Draft
+status: Implemented
 author: Donald Gifford
 created: 2026-03-15
 ---
@@ -9,7 +9,7 @@ created: 2026-03-15
 
 # DESIGN 0001: FleetDM Helm Chart
 
-**Status:** Draft
+**Status:** Implemented
 **Author:** Donald Gifford
 **Date:** 2026-03-15
 
@@ -114,9 +114,15 @@ charts/fleetdm/
 │       └── test-fleet-health.yaml
 └── tests/                      # helm-unittest files
     ├── deployment_test.yaml
+    ├── secret_test.yaml
     ├── pxc_cluster_test.yaml
     ├── httproute_test.yaml
-    └── hpa_test.yaml
+    ├── ingress_test.yaml
+    ├── hpa_test.yaml
+    ├── pdb_test.yaml
+    ├── service_test.yaml
+    ├── serviceaccount_test.yaml
+    └── valkey_test.yaml
 ```
 
 ### Helper Functions (`_helpers.tpl`)
@@ -291,13 +297,22 @@ persistence is optional and uses a PVC when enabled.
 
 ### Unit Tests (`tests/`, helm-unittest)
 
+10 test suites covering all templates:
+
 - **deployment_test.yaml** — replicas, image tag, env vars for all secret/address
-  combinations, autoscaling interaction, emptyDir mount
+  combinations, autoscaling interaction, security context, emptyDir mount
+- **secret_test.yaml** — conditional rendering for MySQL/PXC/Redis secrets, existingSecret
+  skip, resource-policy keep annotation
 - **pxc_cluster_test.yaml** — enabled/disabled rendering, cluster name, size, secret name
-  derivation, haproxy defaults, backup toggle
-- **httproute_test.yaml** — enabled/disabled rendering, Certificate + HTTPRoute combo,
-  hostname, parentRefs
+  derivation, haproxy defaults, backup toggle, ArgoCD SSA annotation
+- **httproute_test.yaml** — enabled/disabled rendering, parentRefs guard, Certificate +
+  HTTPRoute combo, hostname, parentRefs
+- **ingress_test.yaml** — enabled/disabled, className, annotations, TLS config
 - **hpa_test.yaml** — enabled/disabled rendering, min/max replicas, CPU target
+- **pdb_test.yaml** — enabled/disabled rendering, minAvailable
+- **service_test.yaml** — service type, port
+- **serviceaccount_test.yaml** — create/skip, annotations, automount disabled
+- **valkey_test.yaml** — enabled/disabled, emptyDir/PVC persistence, requirepass toggle
 
 ### Chart Testing CI Values (`ci/`)
 
