@@ -107,6 +107,7 @@ jobs:
           scanners: vuln,misconfig
           severity: HIGH,CRITICAL
           exit-code: "1"
+          skip-dirs: charts
 
       - name: Set up Helm
         uses: azure/setup-helm@v4

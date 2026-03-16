@@ -13,15 +13,17 @@
   ],
   customManagers: [
     {
-      // Track appVersion in Chart.yaml against container tags or GitHub releases.
-      // Each Chart.yaml must annotate appVersion like:
-      //   appVersion: "1.2.3" # renovate: datasource=docker depName=ghcr.io/org/app
+      // Track appVersion in Chart.yaml against Docker image tags.
+      // Each Chart.yaml must annotate appVersion with a comment on the line above:
+      //   # renovate: image=fleetdm/fleet
+      //   appVersion: "4.82.0"
       customType: "regex",
       fileMatch: ["charts/.+/Chart\\.yaml$"],
       matchStrings: [
-        "appVersion:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?\\s*#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)",
+        "#\\s*renovate:\\s*image=(?<depName>[^\\s]+)\\nappVersion:\\s*[\"']?(?<currentValue>[^\"'\\s]+)",
       ],
-      versioningScheme: "semver",
+      datasourceTemplate: "docker",
+      versioning: "semver",
     },
   ],
 }
