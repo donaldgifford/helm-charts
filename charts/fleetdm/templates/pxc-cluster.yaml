@@ -29,6 +29,10 @@ spec:
     resources:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.pxc.initResources }}
+    initResources:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     volumeSpec:
       persistentVolumeClaim:
         {{- if .Values.pxc.storage.storageClassName }}

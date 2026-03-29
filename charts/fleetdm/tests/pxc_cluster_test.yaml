@@ -162,6 +162,25 @@ tests:
       - isNull:
           path: spec.unsafeFlags
 
+  - it: sets initResources on PXC nodes
+    set:
+      pxc:
+        enabled: true
+        initResources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+    asserts:
+      - equal:
+          path: spec.pxc.initResources.requests.memory
+          value: 128Mi
+      - equal:
+          path: spec.pxc.initResources.limits.memory
+          value: 256Mi
+
   - it: includes backup when enabled
     set:
       pxc:
