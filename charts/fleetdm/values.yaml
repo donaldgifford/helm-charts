@@ -89,6 +89,8 @@ cache:
 pxc:
   # -- Deploy a PerconaXtraDBCluster CR for MySQL
   enabled: true
+  # -- Allow unsafe single-node PXC and single-replica HAProxy (dev/test only, NOT for production)
+  allowUnsafe: false
   # -- PXC cluster name
   clusterName: fleet-pxc
   # -- Name of an existing secret for PXC credentials
