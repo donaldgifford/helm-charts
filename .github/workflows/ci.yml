@@ -125,6 +125,49 @@ jobs:
             done
           done
 
+  chart-version-check:
+    name: Chart Version Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check chart version bumped when files change
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          failed=0
+
+          for chart_yaml in charts/*/Chart.yaml; do
+            [ -f "$chart_yaml" ] || continue
+            chart_dir=$(dirname "$chart_yaml")
+            chart_name=$(basename "$chart_dir")
+
+            # Check if any files in this chart dir changed (excluding Chart.yaml itself)
+            changed=$(git diff --name-only "$base" "$head" -- "$chart_dir" | grep -v 'Chart\.yaml$' || true)
+            if [ -z "$changed" ]; then
+              echo "✓ $chart_name — no file changes"
+              continue
+            fi
+
+            # Check if Chart.yaml version field changed
+            old_version=$(git show "${base}:${chart_yaml}" 2>/dev/null | grep '^version:' | awk '{print $2}' || echo "")
+            new_version=$(grep '^version:' "$chart_yaml" | awk '{print $2}')
+
+            if [ "$old_version" = "$new_version" ]; then
+              echo "::error::Chart '$chart_name' has file changes but version is still $new_version. Bump the version in $chart_yaml."
+              failed=1
+            else
+              echo "✓ $chart_name — version bumped $old_version → $new_version"
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            exit 1
+          fi
+
   renovate-validate:
     name: Validate Renovate Config
     runs-on: ubuntu-latest
