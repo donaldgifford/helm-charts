@@ -1,0 +1,149 @@
+---
+suite: mysql-init-job
+templates:
+  - templates/mysql-init-job.yaml
+tests:
+  - it: renders Job when pxc.enabled
+    set:
+      pxc:
+        enabled: true
+    asserts:
+      - isKind:
+          of: Job
+
+  - it: does not render when pxc.enabled is false
+    set:
+      pxc:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: uses post-install and post-upgrade hooks
+    set:
+      pxc:
+        enabled: true
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: "post-install,post-upgrade"
+
+  - it: uses before-hook-creation and hook-succeeded delete policies
+    set:
+      pxc:
+        enabled: true
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook-delete-policy"]
+          value: "before-hook-creation,hook-succeeded"
+
+  - it: reads root password from PXC secret
+    set:
+      pxc:
+        enabled: true
+        existingSecret: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-fleetdm-pxc
+                key: root
+
+  - it: reads root password from existingSecret when set
+    set:
+      pxc:
+        enabled: true
+        existingSecret: my-pxc-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-pxc-secret
+                key: root
+
+  - it: reads fleet password from MySQL secret
+    set:
+      pxc:
+        enabled: true
+      database:
+        existingSecret: ""
+        passwordKey: mysql-password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-fleetdm-mysql
+                key: mysql-password
+
+  - it: reads fleet password from database.existingSecret when set
+    set:
+      pxc:
+        enabled: true
+      database:
+        existingSecret: my-db-secret
+        passwordKey: my-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-db-secret
+                key: my-key
+
+  - it: sets database name and username from values
+    set:
+      pxc:
+        enabled: true
+      database:
+        name: mydb
+        username: myuser
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_DB_NAME
+            value: "mydb"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_DB_USER
+            value: "myuser"
+
+  - it: uses the configured init job image
+    set:
+      pxc:
+        enabled: true
+        initJob:
+          image:
+            repository: mysql
+            tag: "8.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "mysql:8.0"
+
+  - it: has security contexts for Trivy compliance
+    set:
+      pxc:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
