@@ -2,7 +2,7 @@
 
 A Helm chart for FleetDM — open-source device management with PXC-backed MySQL and optional Valkey cache
 
-![Version: 0.3.3](https://img.shields.io/badge/Version-0.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.3.4](https://img.shields.io/badge/Version-0.3.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -113,6 +113,10 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | ingress.enabled | bool | `false` | Enable classic Ingress (disabled by default; use httpRoute instead) |
 | ingress.hosts | list | `[]` | Ingress host rules |
 | ingress.tls | list | `[]` | Ingress TLS configuration |
+| livenessProbe.failureThreshold | int | `6` | Liveness probe failure threshold |
+| livenessProbe.initialDelaySeconds | int | `120` | Liveness probe initial delay (increase on first deploy while schema imports) |
+| livenessProbe.periodSeconds | int | `10` | Liveness probe period |
+| livenessProbe.timeoutSeconds | int | `5` | Liveness probe timeout |
 | nameOverride | string | `""` | Override the chart name |
 | nodeSelector | object | `{}` | Node selector for Fleet pods |
 | podDisruptionBudget.enabled | bool | `false` | Enable PodDisruptionBudget |
@@ -148,6 +152,10 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | pxc.size | int | `3` | Number of PXC nodes (must be odd: 1, 3, 5, or 7) |
 | pxc.storage.size | string | `"20Gi"` | PXC storage size per node |
 | pxc.storage.storageClassName | string | `""` | PXC storage class name (uses cluster default when empty) |
+| readinessProbe.failureThreshold | int | `3` | Readiness probe failure threshold |
+| readinessProbe.initialDelaySeconds | int | `120` | Readiness probe initial delay (increase on first deploy while schema imports) |
+| readinessProbe.periodSeconds | int | `10` | Readiness probe period |
+| readinessProbe.timeoutSeconds | int | `5` | Readiness probe timeout |
 | replicaCount | int | `1` | Number of Fleet server replicas (ignored when autoscaling is enabled) |
 | resources.limits.memory | string | `"512Mi"` | Fleet memory limit |
 | resources.requests.cpu | string | `"250m"` | Fleet CPU request |
@@ -157,6 +165,10 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | serviceAccount.annotations | object | `{}` | ServiceAccount annotations |
 | serviceAccount.create | bool | `true` | Create a ServiceAccount |
 | serviceAccount.name | string | `""` | Override the ServiceAccount name (defaults to fullname) |
+| startupProbe.enabled | bool | `true` | Enable startup probe (recommended for first deploy to allow schema migration time) |
+| startupProbe.failureThreshold | int | `30` | Startup probe failure threshold (periodSeconds * failureThreshold = max startup time) |
+| startupProbe.periodSeconds | int | `10` | Startup probe period |
+| startupProbe.timeoutSeconds | int | `5` | Startup probe timeout |
 | tolerations | list | `[]` | Tolerations for Fleet pods |
 | valkey.enabled | bool | `false` | Deploy an embedded Valkey (Redis-compatible) instance |
 | valkey.image.repository | string | `"valkey/valkey"` | Valkey image repository |

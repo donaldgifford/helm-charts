@@ -231,6 +231,62 @@ tests:
             name: FLEET_UPGRADES_ALLOW_MISSING_MIGRATIONS
             value: "true"
 
+  - it: uses configurable liveness probe values
+    set:
+      livenessProbe:
+        initialDelaySeconds: 180
+        periodSeconds: 15
+        timeoutSeconds: 10
+        failureThreshold: 5
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 180
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.periodSeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.failureThreshold
+          value: 5
+
+  - it: uses configurable readiness probe values
+    set:
+      readinessProbe:
+        initialDelaySeconds: 60
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 10
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 60
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.failureThreshold
+          value: 10
+
+  - it: includes startup probe when enabled
+    set:
+      startupProbe:
+        enabled: true
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 30
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /healthz
+
+  - it: omits startup probe when disabled
+    set:
+      startupProbe:
+        enabled: false
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].startupProbe
+
   - it: sets resource requests and limits
     set:
       resources:
