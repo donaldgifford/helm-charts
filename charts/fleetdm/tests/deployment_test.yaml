@@ -202,6 +202,35 @@ tests:
             name: FLEET_MYSQL_CONN_MAX_LIFETIME
             value: "0"
 
+  - it: runs prepare db before serve when autoApplySQLMigrations is true
+    set:
+      fleet:
+        autoApplySQLMigrations: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: [sh, -c, "fleet prepare db --no-prompt && fleet serve"]
+
+  - it: runs fleet serve directly when autoApplySQLMigrations is false
+    set:
+      fleet:
+        autoApplySQLMigrations: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: [fleet, serve]
+
+  - it: sets FLEET_UPGRADES_ALLOW_MISSING_MIGRATIONS env var
+    set:
+      fleet:
+        autoApplySQLMigrations: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_UPGRADES_ALLOW_MISSING_MIGRATIONS
+            value: "true"
+
   - it: sets resource requests and limits
     set:
       resources:

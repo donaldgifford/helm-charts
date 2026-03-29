@@ -30,7 +30,11 @@ spec:
         - name: fleet
           image: {{ include "fleetdm.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.fleet.autoApplySQLMigrations }}
+          command: [sh, -c, "fleet prepare db --no-prompt && fleet serve"]
+          {{- else }}
           command: [fleet, serve]
+          {{- end }}
           securityContext:
             readOnlyRootFilesystem: true
             runAsNonRoot: true
@@ -125,6 +129,9 @@ spec:
             # Vulnerabilities
             - name: FLEET_VULNERABILITIES_DATABASES_PATH
               value: {{ .Values.fleet.vulnerabilities.databasesPath | quote }}
+            # Upgrades
+            - name: FLEET_UPGRADES_ALLOW_MISSING_MIGRATIONS
+              value: {{ .Values.fleet.autoApplySQLMigrations | quote }}
             # License
             {{- if .Values.fleet.license.secretName }}
             - name: FLEET_LICENSE_KEY
