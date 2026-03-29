@@ -2,7 +2,7 @@
 
 A Helm chart for FleetDM — open-source device management with PXC-backed MySQL and optional Valkey cache
 
-![Version: 0.3.2](https://img.shields.io/badge/Version-0.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.3.3](https://img.shields.io/badge/Version-0.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -136,12 +136,12 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | pxc.haproxy.size | int | `2` | Number of HAProxy replicas |
 | pxc.image.repository | string | `"percona/percona-xtradb-cluster"` | PXC image repository |
 | pxc.image.tag | string | `"8.0.36-28.1"` | PXC image tag |
+| pxc.initContainer.resources.limits.cpu | string | `"200m"` | PXC init container CPU limit |
+| pxc.initContainer.resources.limits.memory | string | `"200M"` | PXC init container memory limit |
+| pxc.initContainer.resources.requests.cpu | string | `"100m"` | PXC init container CPU request |
+| pxc.initContainer.resources.requests.memory | string | `"100M"` | PXC init container memory request |
 | pxc.initJob.image.repository | string | `"mysql"` | MySQL init job image repository |
 | pxc.initJob.image.tag | string | `"8.0"` | MySQL init job image tag |
-| pxc.initResources.limits.cpu | string | `"200m"` | PXC init container CPU limit |
-| pxc.initResources.limits.memory | string | `"256Mi"` | PXC init container memory limit |
-| pxc.initResources.requests.cpu | string | `"100m"` | PXC init container CPU request |
-| pxc.initResources.requests.memory | string | `"128Mi"` | PXC init container memory request |
 | pxc.resources.limits.memory | string | `"2Gi"` | PXC node memory limit |
 | pxc.resources.requests.cpu | string | `"600m"` | PXC node CPU request |
 | pxc.resources.requests.memory | string | `"1Gi"` | PXC node memory request |

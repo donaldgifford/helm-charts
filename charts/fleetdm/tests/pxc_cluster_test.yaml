@@ -162,24 +162,25 @@ tests:
       - isNull:
           path: spec.unsafeFlags
 
-  - it: sets initResources on PXC nodes
+  - it: sets initContainer resources at top-level spec
     set:
       pxc:
         enabled: true
-        initResources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 200m
-            memory: 256Mi
+        initContainer:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100M
+            limits:
+              cpu: 200m
+              memory: 200M
     asserts:
       - equal:
-          path: spec.pxc.initResources.requests.memory
-          value: 128Mi
+          path: spec.initContainer.resources.requests.memory
+          value: 100M
       - equal:
-          path: spec.pxc.initResources.limits.memory
-          value: 256Mi
+          path: spec.initContainer.resources.limits.memory
+          value: 200M
 
   - it: includes backup when enabled
     set:

@@ -22,15 +22,15 @@ spec:
     proxySize: true
   {{- end }}
   secretsName: {{ include "fleetdm.pxcSecretName" . }}
+  {{- with .Values.pxc.initContainer }}
+  initContainer:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   pxc:
     size: {{ .Values.pxc.size }}
     image: "{{ .Values.pxc.image.repository }}:{{ .Values.pxc.image.tag }}"
     {{- with .Values.pxc.resources }}
     resources:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .Values.pxc.initResources }}
-    initResources:
       {{- toYaml . | nindent 6 }}
     {{- end }}
     volumeSpec:
