@@ -257,6 +257,36 @@ resources:
     # -- Fleet memory limit
     memory: 512Mi
 
+livenessProbe:
+  # -- Liveness probe initial delay (increase on first deploy while schema imports)
+  initialDelaySeconds: 120
+  # -- Liveness probe period
+  periodSeconds: 10
+  # -- Liveness probe timeout
+  timeoutSeconds: 5
+  # -- Liveness probe failure threshold
+  failureThreshold: 6
+
+readinessProbe:
+  # -- Readiness probe initial delay (increase on first deploy while schema imports)
+  initialDelaySeconds: 120
+  # -- Readiness probe period
+  periodSeconds: 10
+  # -- Readiness probe timeout
+  timeoutSeconds: 5
+  # -- Readiness probe failure threshold
+  failureThreshold: 3
+
+startupProbe:
+  # -- Enable startup probe (recommended for first deploy to allow schema migration time)
+  enabled: true
+  # -- Startup probe period
+  periodSeconds: 10
+  # -- Startup probe timeout
+  timeoutSeconds: 5
+  # -- Startup probe failure threshold (periodSeconds * failureThreshold = max startup time)
+  failureThreshold: 30
+
 autoscaling:
   # -- Enable HorizontalPodAutoscaler
   enabled: false
