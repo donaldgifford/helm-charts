@@ -124,7 +124,10 @@ tests:
           path: spec.pxc.size
           value: 1
       - equal:
-          path: spec.allowUnsafeConfigurations
+          path: spec.unsafeFlags.pxcSize
+          value: true
+      - equal:
+          path: spec.unsafeFlags.proxySize
           value: true
 
   - it: allows haproxy.size 1 when allowUnsafe is true
@@ -144,17 +147,20 @@ tests:
           path: spec.haproxy.size
           value: 1
       - equal:
-          path: spec.allowUnsafeConfigurations
+          path: spec.unsafeFlags.pxcSize
+          value: true
+      - equal:
+          path: spec.unsafeFlags.proxySize
           value: true
 
-  - it: omits allowUnsafeConfigurations when allowUnsafe is false
+  - it: omits unsafeFlags when allowUnsafe is false
     set:
       pxc:
         enabled: true
         allowUnsafe: false
     asserts:
       - isNull:
-          path: spec.allowUnsafeConfigurations
+          path: spec.unsafeFlags
 
   - it: includes backup when enabled
     set:
