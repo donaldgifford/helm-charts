@@ -2,7 +2,7 @@
 
 A Helm chart for FleetDM — open-source device management with PXC-backed MySQL and optional Valkey cache
 
-![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -136,6 +136,8 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | pxc.haproxy.size | int | `2` | Number of HAProxy replicas |
 | pxc.image.repository | string | `"percona/percona-xtradb-cluster"` | PXC image repository |
 | pxc.image.tag | string | `"8.0.36-28.1"` | PXC image tag |
+| pxc.initJob.image.repository | string | `"mysql"` | MySQL init job image repository |
+| pxc.initJob.image.tag | string | `"8.0"` | MySQL init job image tag |
 | pxc.resources.limits.memory | string | `"2Gi"` | PXC node memory limit |
 | pxc.resources.requests.cpu | string | `"600m"` | PXC node CPU request |
 | pxc.resources.requests.memory | string | `"1Gi"` | PXC node memory request |
