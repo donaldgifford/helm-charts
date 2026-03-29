@@ -117,17 +117,18 @@ pxc:
     limits:
       # -- PXC node memory limit
       memory: 2Gi
-  initResources:
-    requests:
-      # -- PXC init container CPU request
-      cpu: 100m
-      # -- PXC init container memory request
-      memory: 128Mi
-    limits:
-      # -- PXC init container CPU limit
-      cpu: 200m
-      # -- PXC init container memory limit
-      memory: 256Mi
+  initContainer:
+    resources:
+      requests:
+        # -- PXC init container CPU request
+        cpu: 100m
+        # -- PXC init container memory request
+        memory: 100M
+      limits:
+        # -- PXC init container CPU limit
+        cpu: 200m
+        # -- PXC init container memory limit
+        memory: 200M
   storage:
     # -- PXC storage size per node
     size: 20Gi
