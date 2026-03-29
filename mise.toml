@@ -13,7 +13,7 @@ actionlint = "latest"
 # tools
 yq = "4.48.1"
 jq = "latest"
-"github:donaldgifford/docz" = "0.0.8"
+"github:donaldgifford/docz" = "latest"
 
 # Security
 trivy = "latest"
