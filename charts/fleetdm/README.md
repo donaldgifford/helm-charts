@@ -117,6 +117,7 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | nodeSelector | object | `{}` | Node selector for Fleet pods |
 | podDisruptionBudget.enabled | bool | `false` | Enable PodDisruptionBudget |
 | podDisruptionBudget.minAvailable | int | `1` | Minimum number of available pods |
+| pxc.allowUnsafe | bool | `false` | Allow unsafe single-node PXC and single-replica HAProxy (dev/test only, NOT for production) |
 | pxc.backup.enabled | bool | `false` | Enable PXC scheduled backups |
 | pxc.backup.s3Bucket | string | `""` | S3 bucket name for backups |
 | pxc.backup.s3CredentialsSecret | string | `""` | S3 credentials secret name |

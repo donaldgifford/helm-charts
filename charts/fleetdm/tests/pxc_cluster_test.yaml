@@ -87,6 +87,75 @@ tests:
       - isNull:
           path: spec.backup
 
+  - it: fails when pxc.size < 3 and allowUnsafe is false
+    set:
+      pxc:
+        enabled: true
+        size: 1
+        allowUnsafe: false
+    asserts:
+      - failedTemplate:
+          errorMessage: "pxc.size must be >= 3 for production use. Set pxc.allowUnsafe: true to allow single-node PXC (dev/test only)."
+
+  - it: fails when haproxy.size < 2 and allowUnsafe is false
+    set:
+      pxc:
+        enabled: true
+        size: 3
+        allowUnsafe: false
+        haproxy:
+          enabled: true
+          size: 1
+          image:
+            repository: percona/haproxy
+            tag: "2.8.5"
+    asserts:
+      - failedTemplate:
+          errorMessage: "pxc.haproxy.size must be >= 2 for production use. Set pxc.allowUnsafe: true to allow single-replica HAProxy (dev/test only)."
+
+  - it: allows pxc.size 1 when allowUnsafe is true
+    set:
+      pxc:
+        enabled: true
+        size: 1
+        allowUnsafe: true
+    asserts:
+      - equal:
+          path: spec.pxc.size
+          value: 1
+      - equal:
+          path: spec.allowUnsafeConfigurations
+          value: true
+
+  - it: allows haproxy.size 1 when allowUnsafe is true
+    set:
+      pxc:
+        enabled: true
+        size: 3
+        allowUnsafe: true
+        haproxy:
+          enabled: true
+          size: 1
+          image:
+            repository: percona/haproxy
+            tag: "2.8.5"
+    asserts:
+      - equal:
+          path: spec.haproxy.size
+          value: 1
+      - equal:
+          path: spec.allowUnsafeConfigurations
+          value: true
+
+  - it: omits allowUnsafeConfigurations when allowUnsafe is false
+    set:
+      pxc:
+        enabled: true
+        allowUnsafe: false
+    asserts:
+      - isNull:
+          path: spec.allowUnsafeConfigurations
+
   - it: includes backup when enabled
     set:
       pxc:
