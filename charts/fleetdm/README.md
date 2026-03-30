@@ -1,8 +1,8 @@
 # fleetdm
 
-A Helm chart for FleetDM — open-source device management with PXC-backed MySQL and optional Valkey cache
+A Helm chart for FleetDM — open-source device management with embedded MySQL and optional Valkey cache
 
-![Version: 0.3.4](https://img.shields.io/badge/Version-0.3.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -10,7 +10,6 @@ A Helm chart for FleetDM — open-source device management with PXC-backed MySQL
 |------------|-----------------|----------|
 | Kubernetes | 1.25+ | Yes |
 | Helm | 3.10+ | Yes |
-| PXC Operator | 1.13+ | When `pxc.enabled: true` |
 | Gateway API CRDs | v1 | When `httpRoute.enabled: true` with `parentRefs` set |
 | cert-manager | v1.12+ | When `httpRoute.certManager.enabled: true` |
 
@@ -20,16 +19,39 @@ A Helm chart for FleetDM — open-source device management with PXC-backed MySQL
 helm repo add donaldgifford https://donaldgifford.github.io/helm-charts
 helm repo update
 
-# Minimal install with external MySQL and Redis
+# Default install with embedded MySQL and Valkey disabled
 helm install fleet donaldgifford/fleetdm \
-  --set pxc.enabled=false \
+  --set cache.address=redis:6379
+
+# Install with embedded MySQL and embedded Valkey
+helm install fleet donaldgifford/fleetdm \
+  --set valkey.enabled=true
+
+# Install with external MySQL (embedded MySQL disabled)
+helm install fleet donaldgifford/fleetdm \
+  --set mysql.enabled=false \
   --set database.address=mysql:3306 \
   --set database.existingSecret=my-mysql-secret \
   --set cache.address=redis:6379
+```
 
-# Install with PXC cluster and embedded Valkey
-helm install fleet donaldgifford/fleetdm \
-  --set valkey.enabled=true
+## Database
+
+The chart includes an embedded MySQL 8.0 StatefulSet that is enabled by default.
+MySQL automatically creates the Fleet database and user on first startup via
+`MYSQL_DATABASE`, `MYSQL_USER`, and `MYSQL_PASSWORD` environment variables.
+
+To use an external MySQL (RDS, Aurora, Cloud SQL, etc.), disable the embedded
+MySQL and provide the connection details:
+
+```yaml
+mysql:
+  enabled: false
+
+database:
+  address: "my-rds-instance.region.rds.amazonaws.com:3306"
+  existingSecret: fleet-mysql-credentials
+  passwordKey: mysql-password
 ```
 
 ## Secret Management
@@ -47,9 +69,6 @@ database:
 cache:
   existingSecret: fleet-redis-credentials
   passwordKey: redis-password
-
-pxc:
-  existingSecret: fleet-pxc-credentials
 ```
 
 ## Post-Install Validation
@@ -74,7 +93,7 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | cache.existingSecret | string | `""` | Name of an existing secret containing the cache password |
 | cache.passwordKey | string | `"redis-password"` | Key in the cache secret that holds the password |
 | cache.usePassword | bool | `true` | Enable password authentication for cache |
-| database.address | string | `""` | MySQL server address (auto-derived from PXC when empty and pxc.enabled is true) |
+| database.address | string | `""` | MySQL server address (auto-derived from embedded MySQL when empty and mysql.enabled is true) |
 | database.connMaxLifetime | string | `"0"` | Maximum lifetime of a database connection (Go duration string) |
 | database.existingSecret | string | `""` | Name of an existing secret containing the MySQL password |
 | database.maxIdleConns | int | `50` | Maximum number of idle database connections |
@@ -117,41 +136,20 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | livenessProbe.initialDelaySeconds | int | `120` | Liveness probe initial delay (increase on first deploy while schema imports) |
 | livenessProbe.periodSeconds | int | `10` | Liveness probe period |
 | livenessProbe.timeoutSeconds | int | `5` | Liveness probe timeout |
+| mysql.enabled | bool | `true` | Deploy an embedded MySQL StatefulSet |
+| mysql.image.repository | string | `"mysql"` | MySQL image repository |
+| mysql.image.tag | string | `"8.0"` | MySQL image tag |
+| mysql.persistence.enabled | bool | `true` | Enable persistent storage for MySQL |
+| mysql.persistence.size | string | `"10Gi"` | MySQL PVC size |
+| mysql.persistence.storageClassName | string | `""` | MySQL storage class name (uses cluster default when empty) |
+| mysql.resources.limits.memory | string | `"1Gi"` | MySQL memory limit |
+| mysql.resources.requests.cpu | string | `"250m"` | MySQL CPU request |
+| mysql.resources.requests.memory | string | `"512Mi"` | MySQL memory request |
+| mysql.service.port | int | `3306` | MySQL service port |
 | nameOverride | string | `""` | Override the chart name |
 | nodeSelector | object | `{}` | Node selector for Fleet pods |
 | podDisruptionBudget.enabled | bool | `false` | Enable PodDisruptionBudget |
 | podDisruptionBudget.minAvailable | int | `1` | Minimum number of available pods |
-| pxc.allowUnsafe | bool | `false` | Allow unsafe single-node PXC and single-replica HAProxy (dev/test only, NOT for production) |
-| pxc.backup.enabled | bool | `false` | Enable PXC scheduled backups |
-| pxc.backup.s3Bucket | string | `""` | S3 bucket name for backups |
-| pxc.backup.s3CredentialsSecret | string | `""` | S3 credentials secret name |
-| pxc.backup.s3Region | string | `"us-east-1"` | S3 region |
-| pxc.backup.schedule | string | `"0 4 * * *"` | Backup schedule (cron expression) |
-| pxc.backup.storageType | string | `"s3"` | Backup storage type (s3 or filesystem) |
-| pxc.clusterName | string | `"fleet-pxc"` | PXC cluster name |
-| pxc.enabled | bool | `true` | Deploy a PerconaXtraDBCluster CR for MySQL |
-| pxc.existingSecret | string | `""` | Name of an existing secret for PXC credentials |
-| pxc.haproxy.enabled | bool | `true` | Enable HAProxy for PXC |
-| pxc.haproxy.image.repository | string | `"percona/haproxy"` | HAProxy image repository |
-| pxc.haproxy.image.tag | string | `"2.8.5"` | HAProxy image tag |
-| pxc.haproxy.resources.limits.memory | string | `"256Mi"` | HAProxy memory limit |
-| pxc.haproxy.resources.requests.cpu | string | `"100m"` | HAProxy CPU request |
-| pxc.haproxy.resources.requests.memory | string | `"128Mi"` | HAProxy memory request |
-| pxc.haproxy.size | int | `2` | Number of HAProxy replicas |
-| pxc.image.repository | string | `"percona/percona-xtradb-cluster"` | PXC image repository |
-| pxc.image.tag | string | `"8.0.36-28.1"` | PXC image tag |
-| pxc.initContainer.resources.limits.cpu | string | `"200m"` | PXC init container CPU limit |
-| pxc.initContainer.resources.limits.memory | string | `"200M"` | PXC init container memory limit |
-| pxc.initContainer.resources.requests.cpu | string | `"100m"` | PXC init container CPU request |
-| pxc.initContainer.resources.requests.memory | string | `"100M"` | PXC init container memory request |
-| pxc.initJob.image.repository | string | `"mysql"` | MySQL init job image repository |
-| pxc.initJob.image.tag | string | `"8.0"` | MySQL init job image tag |
-| pxc.resources.limits.memory | string | `"2Gi"` | PXC node memory limit |
-| pxc.resources.requests.cpu | string | `"600m"` | PXC node CPU request |
-| pxc.resources.requests.memory | string | `"1Gi"` | PXC node memory request |
-| pxc.size | int | `3` | Number of PXC nodes (must be odd: 1, 3, 5, or 7) |
-| pxc.storage.size | string | `"20Gi"` | PXC storage size per node |
-| pxc.storage.storageClassName | string | `""` | PXC storage class name (uses cluster default when empty) |
 | readinessProbe.failureThreshold | int | `3` | Readiness probe failure threshold |
 | readinessProbe.initialDelaySeconds | int | `120` | Readiness probe initial delay (increase on first deploy while schema imports) |
 | readinessProbe.periodSeconds | int | `10` | Readiness probe period |

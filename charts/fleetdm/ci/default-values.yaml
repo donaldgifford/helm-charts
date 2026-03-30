@@ -1,7 +1,7 @@
 ---
 # CI test values: minimal install with external MySQL/Redis stubs
-# PXC disabled, Valkey disabled, no Gateway API or Ingress
-pxc:
+# Embedded MySQL disabled, Valkey disabled, no Gateway API or Ingress
+mysql:
   enabled: false
 
 valkey:

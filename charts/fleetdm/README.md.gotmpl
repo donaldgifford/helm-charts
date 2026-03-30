@@ -10,7 +10,6 @@
 |------------|-----------------|----------|
 | Kubernetes | 1.25+ | Yes |
 | Helm | 3.10+ | Yes |
-| PXC Operator | 1.13+ | When `pxc.enabled: true` |
 | Gateway API CRDs | v1 | When `httpRoute.enabled: true` with `parentRefs` set |
 | cert-manager | v1.12+ | When `httpRoute.certManager.enabled: true` |
 
@@ -20,16 +19,39 @@
 helm repo add donaldgifford https://donaldgifford.github.io/helm-charts
 helm repo update
 
-# Minimal install with external MySQL and Redis
+# Default install with embedded MySQL and Valkey disabled
 helm install fleet donaldgifford/fleetdm \
-  --set pxc.enabled=false \
+  --set cache.address=redis:6379
+
+# Install with embedded MySQL and embedded Valkey
+helm install fleet donaldgifford/fleetdm \
+  --set valkey.enabled=true
+
+# Install with external MySQL (embedded MySQL disabled)
+helm install fleet donaldgifford/fleetdm \
+  --set mysql.enabled=false \
   --set database.address=mysql:3306 \
   --set database.existingSecret=my-mysql-secret \
   --set cache.address=redis:6379
+```
 
-# Install with PXC cluster and embedded Valkey
-helm install fleet donaldgifford/fleetdm \
-  --set valkey.enabled=true
+## Database
+
+The chart includes an embedded MySQL 8.0 StatefulSet that is enabled by default.
+MySQL automatically creates the Fleet database and user on first startup via
+`MYSQL_DATABASE`, `MYSQL_USER`, and `MYSQL_PASSWORD` environment variables.
+
+To use an external MySQL (RDS, Aurora, Cloud SQL, etc.), disable the embedded
+MySQL and provide the connection details:
+
+```yaml
+mysql:
+  enabled: false
+
+database:
+  address: "my-rds-instance.region.rds.amazonaws.com:3306"
+  existingSecret: fleet-mysql-credentials
+  passwordKey: mysql-password
 ```
 
 ## Secret Management
@@ -47,9 +69,6 @@ database:
 cache:
   existingSecret: fleet-redis-credentials
   passwordKey: redis-password
-
-pxc:
-  existingSecret: fleet-pxc-credentials
 ```
 
 ## Post-Install Validation

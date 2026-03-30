@@ -1,0 +1,187 @@
+---
+suite: mysql
+templates:
+  - templates/mysql.yaml
+tests:
+  - it: renders Service and StatefulSet when mysql.enabled
+    set:
+      mysql:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: does not render when mysql.enabled is false
+    set:
+      mysql:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a Service as first document
+    set:
+      mysql:
+        enabled: true
+    asserts:
+      - isKind:
+          of: Service
+        documentIndex: 0
+
+  - it: renders a StatefulSet as second document
+    set:
+      mysql:
+        enabled: true
+    asserts:
+      - isKind:
+          of: StatefulSet
+        documentIndex: 1
+
+  - it: sets mysql service port
+    set:
+      mysql:
+        enabled: true
+        service:
+          port: 3307
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 3307
+        documentIndex: 0
+
+  - it: sets mysql image
+    set:
+      mysql:
+        enabled: true
+        image:
+          repository: mysql
+          tag: "8.4"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "mysql:8.4"
+        documentIndex: 1
+
+  - it: sets MYSQL_DATABASE from database.name
+    set:
+      mysql:
+        enabled: true
+      database:
+        name: mydb
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MYSQL_DATABASE
+            value: "mydb"
+        documentIndex: 1
+
+  - it: sets MYSQL_USER from database.username
+    set:
+      mysql:
+        enabled: true
+      database:
+        username: myuser
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MYSQL_USER
+            value: "myuser"
+        documentIndex: 1
+
+  - it: references generated secret for MYSQL_PASSWORD
+    set:
+      mysql:
+        enabled: true
+      database:
+        existingSecret: ""
+        passwordKey: mysql-password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-fleetdm-mysql
+                key: mysql-password
+        documentIndex: 1
+
+  - it: references generated secret for MYSQL_ROOT_PASSWORD
+    set:
+      mysql:
+        enabled: true
+      database:
+        existingSecret: ""
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-fleetdm-mysql
+                key: mysql-root-password
+        documentIndex: 1
+
+  - it: uses emptyDir when persistence is disabled
+    set:
+      mysql:
+        enabled: true
+        persistence:
+          enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            emptyDir: {}
+        documentIndex: 1
+
+  - it: uses PVC when persistence is enabled
+    set:
+      mysql:
+        enabled: true
+        persistence:
+          enabled: true
+          size: 20Gi
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 20Gi
+        documentIndex: 1
+
+  - it: sets resource requests and limits
+    set:
+      mysql:
+        enabled: true
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            memory: 2Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 500m
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 2Gi
+        documentIndex: 1
+
+  - it: sets security context
+    set:
+      mysql:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 999
+        documentIndex: 1
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+        documentIndex: 1

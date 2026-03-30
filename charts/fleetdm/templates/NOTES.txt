@@ -1,19 +1,10 @@
 Fleet has been deployed!
 
-{{- if .Values.pxc.enabled }}
+{{- if .Values.mysql.enabled }}
 
-NOTE: PXC cluster "{{ .Values.pxc.clusterName }}" will be created.
-  The Percona XtraDB Cluster Operator must be installed and watching
-  namespace "{{ .Release.Namespace }}" for the cluster to become ready.
-
-  Check PXC status:
-    kubectl get pxc {{ .Values.pxc.clusterName }} -n {{ .Release.Namespace }}
-{{- if .Values.pxc.allowUnsafe }}
-
-WARNING: pxc.allowUnsafe is enabled — PXC is running with
-  allowUnsafeConfigurations: true. This allows single-node PXC and
-  single-replica HAProxy. DO NOT use this in production.
-{{- end }}
+NOTE: Embedded MySQL StatefulSet is deployed.
+  Check MySQL status:
+    kubectl get statefulset {{ include "fleetdm.fullname" . }}-mysql -n {{ .Release.Namespace }}
 {{- end }}
 
 Get the Fleet URL:

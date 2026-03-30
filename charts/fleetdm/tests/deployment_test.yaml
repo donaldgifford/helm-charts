@@ -42,11 +42,12 @@ tests:
           path: spec.template.spec.containers[0].image
           value: "fleetdm/fleet:4.80.0"
 
-  - it: sets FLEET_MYSQL_ADDRESS from PXC derivation
+  - it: sets FLEET_MYSQL_ADDRESS from embedded MySQL derivation
     set:
-      pxc:
+      mysql:
         enabled: true
-        clusterName: fleet-pxc
+        service:
+          port: 3306
       database:
         address: ""
     asserts:
@@ -54,11 +55,11 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: FLEET_MYSQL_ADDRESS
-            value: "fleet-pxc-haproxy.NAMESPACE:3306"
+            value: "RELEASE-NAME-fleetdm-mysql.NAMESPACE:3306"
 
   - it: sets FLEET_MYSQL_ADDRESS from explicit address
     set:
-      pxc:
+      mysql:
         enabled: false
       database:
         address: "mysql.db:3306"
