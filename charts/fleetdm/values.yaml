@@ -2,6 +2,9 @@
 # -- Number of Fleet server replicas (ignored when autoscaling is enabled)
 replicaCount: 1
 
+# -- Number of old ReplicaSets to retain for rollback
+revisionHistoryLimit: 1
+
 image:
   # -- Fleet container image repository
   repository: fleetdm/fleet
