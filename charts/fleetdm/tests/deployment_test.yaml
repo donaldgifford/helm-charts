@@ -11,6 +11,14 @@ tests:
       - isKind:
           of: Deployment
 
+  - it: sets revisionHistoryLimit from values
+    set:
+      revisionHistoryLimit: 1
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 1
+
   - it: sets replicas from replicaCount
     set:
       replicaCount: 3

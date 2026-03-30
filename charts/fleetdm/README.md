@@ -2,7 +2,7 @@
 
 A Helm chart for FleetDM — open-source device management with embedded MySQL and optional Valkey cache
 
-![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.4.1](https://img.shields.io/badge/Version-0.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -158,6 +158,7 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | resources.limits.memory | string | `"512Mi"` | Fleet memory limit |
 | resources.requests.cpu | string | `"250m"` | Fleet CPU request |
 | resources.requests.memory | string | `"256Mi"` | Fleet memory request |
+| revisionHistoryLimit | int | `1` | Number of old ReplicaSets to retain for rollback |
 | service.port | int | `8080` | Service port |
 | service.type | string | `"ClusterIP"` | Service type |
 | serviceAccount.annotations | object | `{}` | ServiceAccount annotations |
