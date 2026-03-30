@@ -24,15 +24,6 @@
       },
       "required": ["name", "username", "passwordKey"]
     },
-    "pxc": {
-      "type": "object",
-      "properties": {
-        "size": {
-          "type": "integer",
-          "enum": [1, 3, 5, 7]
-        }
-      }
-    },
     "valkey": {
       "type": "object",
       "properties": {

@@ -92,29 +92,18 @@ Return the Redis/Valkey secret name — existingSecret or chart-generated.
 {{- end }}
 
 {{/*
-Return the PXC credentials secret name — existingSecret or chart-generated.
-*/}}
-{{- define "fleetdm.pxcSecretName" -}}
-{{- if .Values.pxc.existingSecret }}
-{{- .Values.pxc.existingSecret }}
-{{- else }}
-{{- printf "%s-pxc" (include "fleetdm.fullname" .) }}
-{{- end }}
-{{- end }}
-
-{{/*
 Return the MySQL address.
 - If database.address is set, use it directly.
-- If pxc.enabled, derive from PXC HAProxy service.
+- If mysql.enabled, derive from embedded MySQL service.
 - Otherwise, fail with an actionable error message.
 */}}
 {{- define "fleetdm.mysqlAddress" -}}
 {{- if .Values.database.address }}
 {{- .Values.database.address }}
-{{- else if .Values.pxc.enabled }}
-{{- printf "%s-haproxy.%s:3306" .Values.pxc.clusterName .Release.Namespace }}
+{{- else if .Values.mysql.enabled }}
+{{- printf "%s-mysql.%s:%d" (include "fleetdm.fullname" .) .Release.Namespace (.Values.mysql.service.port | int) }}
 {{- else }}
-{{- fail "database.address is required when pxc.enabled is false" }}
+{{- fail "database.address is required when mysql.enabled is false" }}
 {{- end }}
 {{- end }}
 

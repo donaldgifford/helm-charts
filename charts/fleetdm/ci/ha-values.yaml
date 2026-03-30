@@ -1,7 +1,7 @@
 ---
 # CI test values: HA configuration with Valkey, autoscaling, PDB, Ingress
-# PXC disabled (no operator in Kind), HTTPRoute disabled (no Gateway API CRDs)
-pxc:
+# Embedded MySQL disabled (external stub), HTTPRoute disabled (no Gateway API CRDs)
+mysql:
   enabled: false
 
 valkey:

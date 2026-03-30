@@ -57,7 +57,7 @@ fleet:
     databasesPath: "/tmp/vuln"
 
 database:
-  # -- MySQL server address (auto-derived from PXC when empty and pxc.enabled is true)
+  # -- MySQL server address (auto-derived from embedded MySQL when empty and mysql.enabled is true)
   address: ""
   # -- MySQL database name
   name: fleet
@@ -86,86 +86,33 @@ cache:
   # -- Redis database number
   database: "0"
 
-pxc:
-  # -- Deploy a PerconaXtraDBCluster CR for MySQL
+mysql:
+  # -- Deploy an embedded MySQL StatefulSet
   enabled: true
-  # -- Allow unsafe single-node PXC and single-replica HAProxy (dev/test only, NOT for production)
-  allowUnsafe: false
-  # -- PXC cluster name
-  clusterName: fleet-pxc
-  # -- Name of an existing secret for PXC credentials
-  existingSecret: ""
-  # -- Number of PXC nodes (must be odd: 1, 3, 5, or 7)
-  size: 3
-  initJob:
-    image:
-      # -- MySQL init job image repository
-      repository: mysql
-      # -- MySQL init job image tag
-      tag: "8.0"
   image:
-    # -- PXC image repository
-    repository: percona/percona-xtradb-cluster
-    # -- PXC image tag
-    tag: "8.0.36-28.1"
+    # -- MySQL image repository
+    repository: mysql
+    # -- MySQL image tag
+    tag: "8.0"
   resources:
     requests:
-      # -- PXC node CPU request
-      cpu: 600m
-      # -- PXC node memory request
-      memory: 1Gi
+      # -- MySQL CPU request
+      cpu: 250m
+      # -- MySQL memory request
+      memory: 512Mi
     limits:
-      # -- PXC node memory limit
-      memory: 2Gi
-  initContainer:
-    resources:
-      requests:
-        # -- PXC init container CPU request
-        cpu: 100m
-        # -- PXC init container memory request
-        memory: 100M
-      limits:
-        # -- PXC init container CPU limit
-        cpu: 200m
-        # -- PXC init container memory limit
-        memory: 200M
-  storage:
-    # -- PXC storage size per node
-    size: 20Gi
-    # -- PXC storage class name (uses cluster default when empty)
-    storageClassName: ""
-  haproxy:
-    # -- Enable HAProxy for PXC
+      # -- MySQL memory limit
+      memory: 1Gi
+  persistence:
+    # -- Enable persistent storage for MySQL
     enabled: true
-    # -- Number of HAProxy replicas
-    size: 2
-    image:
-      # -- HAProxy image repository
-      repository: percona/haproxy
-      # -- HAProxy image tag
-      tag: "2.8.5"
-    resources:
-      requests:
-        # -- HAProxy CPU request
-        cpu: 100m
-        # -- HAProxy memory request
-        memory: 128Mi
-      limits:
-        # -- HAProxy memory limit
-        memory: 256Mi
-  backup:
-    # -- Enable PXC scheduled backups
-    enabled: false
-    # -- Backup schedule (cron expression)
-    schedule: "0 4 * * *"
-    # -- Backup storage type (s3 or filesystem)
-    storageType: s3
-    # -- S3 bucket name for backups
-    s3Bucket: ""
-    # -- S3 credentials secret name
-    s3CredentialsSecret: ""
-    # -- S3 region
-    s3Region: "us-east-1"
+    # -- MySQL PVC size
+    size: 10Gi
+    # -- MySQL storage class name (uses cluster default when empty)
+    storageClassName: ""
+  service:
+    # -- MySQL service port
+    port: 3306
 
 valkey:
   # -- Deploy an embedded Valkey (Redis-compatible) instance
