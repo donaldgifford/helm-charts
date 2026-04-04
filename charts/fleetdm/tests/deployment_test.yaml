@@ -131,6 +131,34 @@ tests:
             name: FLEET_REDIS_PASSWORD
           any: true
 
+  - it: omits FLEET_SERVER_PRIVATE_KEY when not configured
+    set:
+      fleet:
+        serverPrivateKey:
+          secretName: ""
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_SERVER_PRIVATE_KEY
+          any: true
+
+  - it: includes FLEET_SERVER_PRIVATE_KEY when secret is set
+    set:
+      fleet:
+        serverPrivateKey:
+          secretName: fleet-private-key
+          secretKey: server-private-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FLEET_SERVER_PRIVATE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: fleet-private-key
+                key: server-private-key
+
   - it: omits FLEET_LICENSE_KEY when license is not configured
     set:
       fleet:

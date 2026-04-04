@@ -2,7 +2,7 @@
 
 A Helm chart for FleetDM — open-source device management with embedded MySQL and optional Valkey cache
 
-![Version: 0.4.1](https://img.shields.io/badge/Version-0.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.4.2](https://img.shields.io/badge/Version-0.4.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -111,6 +111,8 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | fleet.logging.debug | bool | `false` | Enable debug logging |
 | fleet.logging.disableBanner | bool | `false` | Disable the Fleet startup banner |
 | fleet.logging.json | bool | `true` | Use JSON-formatted logs |
+| fleet.serverPrivateKey.secretKey | string | `"server-private-key"` | Key in the secret that holds the server private key value |
+| fleet.serverPrivateKey.secretName | string | `""` | Name of an existing secret containing the Fleet server private key (required for MDM and encrypted config storage, must be >= 32 bytes, generate with: openssl rand -base64 32) |
 | fleet.serverURL | string | `""` | Fleet server URL (the external URL users/agents connect to) |
 | fleet.session.duration | string | `"2160h"` | Session duration (Go duration string) |
 | fleet.session.keySize | int | `64` | Session key size in bytes |
