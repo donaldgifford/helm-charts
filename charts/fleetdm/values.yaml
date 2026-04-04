@@ -33,6 +33,11 @@ fleet:
     disableBanner: false
   # -- Fleet server URL (the external URL users/agents connect to)
   serverURL: ""
+  serverPrivateKey:
+    # -- Name of an existing secret containing the Fleet server private key (required for MDM and encrypted config storage, must be >= 32 bytes, generate with: openssl rand -base64 32)
+    secretName: ""
+    # -- Key in the secret that holds the server private key value
+    secretKey: "server-private-key"
   license:
     # -- Name of an existing secret containing the Fleet Premium license key
     secretName: ""

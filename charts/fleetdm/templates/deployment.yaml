@@ -91,6 +91,13 @@ spec:
             - name: FLEET_SERVER_URL
               value: {{ .Values.fleet.serverURL | quote }}
             {{- end }}
+            {{- if .Values.fleet.serverPrivateKey.secretName }}
+            - name: FLEET_SERVER_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.fleet.serverPrivateKey.secretName }}
+                  key: {{ .Values.fleet.serverPrivateKey.secretKey }}
+            {{- end }}
             # Logging
             - name: FLEET_LOGGING_DEBUG
               value: {{ .Values.fleet.logging.debug | quote }}
