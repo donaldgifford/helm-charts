@@ -34,4 +34,5 @@ docz create impl "Your Implementation Title"
 |----|-------|--------|------|--------|------|
 | IMPL-0001 | Repository Scaffold | Complete | 2026-03-15 | Donald Gifford | [0001-repository-scaffold.md](0001-repository-scaffold.md) |
 | IMPL-0002 | FleetDM Helm Chart | Complete | 2026-03-15 | Donald Gifford | [0002-fleetdm-helm-chart.md](0002-fleetdm-helm-chart.md) |
+| IMPL-0003 | Require existingSecret for fleetdm chart | Draft | 2026-04-28 | Donald Gifford | [0003-require-existingsecret-for-fleetdm-chart.md](0003-require-existingsecret-for-fleetdm-chart.md) |
 <!-- END DOCZ AUTO-GENERATED -->
