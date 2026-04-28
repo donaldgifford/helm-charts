@@ -68,13 +68,14 @@ appVersion: "4.82.0"
 ## Charts
 
 ### fleetdm
-FleetDM device management chart with PXC-backed MySQL and optional Valkey cache.
-- `existingSecret` pattern throughout — chart generates secrets by default, overridable
-- PXC `PerconaXtraDBCluster` CR (operator deployed separately, apiVersion `pxc.percona.com/v1`)
+FleetDM device management chart with embedded MySQL StatefulSet and optional Valkey cache.
+- Embedded MySQL StatefulSet (replaced PXC operator in 0.4.0; PXC Galera doesn't support `LOCK=NONE` migrations)
+- MySQL Secret: chart generates by default with `lookup`+`randAlphaNum` and `helm.sh/resource-policy: keep` (overridable via `database.existingSecret`)
+- **Cache (Valkey/Redis) Secret: chart never generates** — `cache.existingSecret` is required when `cache.usePassword: true`. Helper `fleetdm.redisSecretName` fails closed with actionable error. Reason: `lookup` returns empty under `helm template` (ArgoCD without `--enable-helm-lookup`, kustomize, helmfile), causing password regeneration drift (INV-0001 / IMPL-0003)
 - Gateway API `HTTPRoute` enabled by default (guarded on non-empty `parentRefs`)
 - Classic `Ingress` supported but disabled by default
 - Fleet image runs as uid=100/gid=101, `readOnlyRootFilesystem: true`
 - Helper `fail` pattern: `mysqlAddress` and `redisAddress` fail with actionable messages when neither address nor embedded service is configured
-- 10 unit test suites (69 tests) in `charts/fleetdm/tests/`
-- CI values: `ci/default-values.yaml` (minimal), `ci/ha-values.yaml` (HA config)
-- Generated secrets use `helm.sh/resource-policy: keep` to survive upgrades
+- 10 unit test suites (82 tests) in `charts/fleetdm/tests/`
+- CI values: `ci/default-values.yaml` (minimal, `cache.usePassword: false`), `ci/ha-values.yaml` (HA config, sets `cache.existingSecret: fleet-redis-stub`)
+- Issue #17 tracks broader idiomatic Helm `secret.create` / `secret.name` rewrite for both DB and cache
