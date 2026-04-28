@@ -161,9 +161,12 @@ Single-file template change plus the supporting test/doc/values updates.
 - [x] Run `helm template charts/fleetdm` (default values, then with
       `cache.usePassword=true cache.existingSecret=""`) and confirm the
       latter fails with the expected message.
-- [ ] Open the PR. Reference INV-0001 and close issue #16 in the body.
-- [ ] Confirm all CI jobs go green.
-- [ ] Merge.
+- [x] Open the PR. Reference INV-0001 and close issue #16 in the body.
+      ([PR #18](https://github.com/donaldgifford/helm-charts/pull/18))
+- [x] Confirm all CI jobs go green. (All 7 CI jobs passed on PR #18:
+      Validate Renovate Config, Chart Version Check, Helm Unit Tests,
+      Chart Testing, Helm Lint, Helm Docs Check, Security Scan.)
+- [ ] Merge. (Operator action — held for user review.)
 
 #### Success Criteria
 
