@@ -87,7 +87,7 @@ cache:
   address: ""
   # -- Enable password authentication for cache
   usePassword: true
-  # -- Name of an existing secret containing the cache password
+  # -- Name of an existing Secret containing the cache password (required when cache.usePassword is true; chart no longer generates one — see INV-0001)
   existingSecret: ""
   # -- Key in the cache secret that holds the password
   passwordKey: redis-password

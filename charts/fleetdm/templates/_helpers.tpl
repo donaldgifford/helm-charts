@@ -81,11 +81,20 @@ Return the MySQL secret name — existingSecret or chart-generated.
 {{- end }}
 
 {{/*
-Return the Redis/Valkey secret name — existingSecret or chart-generated.
+Return the Redis/Valkey secret name.
+- If cache.existingSecret is set, use it directly.
+- If cache.usePassword is true but no existingSecret is set, fail. The
+  chart no longer generates a Redis Secret (see INV-0001) — the Secret
+  must be provisioned out-of-band when password auth is enabled.
+- If cache.usePassword is false, return a fallback name (the env-var ref
+  is gated on usePassword in the deployment, so the value isn't actually
+  used in that case).
 */}}
 {{- define "fleetdm.redisSecretName" -}}
 {{- if .Values.cache.existingSecret }}
 {{- .Values.cache.existingSecret }}
+{{- else if .Values.cache.usePassword }}
+{{- fail "cache.existingSecret is required when cache.usePassword is true. The chart no longer generates a Redis Secret (see INV-0001 / IMPL-0003). Provision the Secret out-of-band (External Secrets, 1Password Operator, sealed-secrets, or raw kubectl apply)." }}
 {{- else }}
 {{- printf "%s-redis" (include "fleetdm.fullname" .) }}
 {{- end }}

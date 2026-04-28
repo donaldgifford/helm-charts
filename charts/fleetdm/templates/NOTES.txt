@@ -7,6 +7,15 @@ NOTE: Embedded MySQL StatefulSet is deployed.
     kubectl get statefulset {{ include "fleetdm.fullname" . }}-mysql -n {{ .Release.Namespace }}
 {{- end }}
 
+{{- if .Values.cache.usePassword }}
+
+NOTE: cache.usePassword is true, so cache.existingSecret must reference
+  a Secret containing the cache password under key
+  "{{ .Values.cache.passwordKey }}". The chart does NOT auto-generate
+  this Secret (see INV-0001). Provision it with External Secrets,
+  1Password Operator, sealed-secrets, or `kubectl create secret`.
+{{- end }}
+
 Get the Fleet URL:
 {{- if and .Values.httpRoute.enabled .Values.httpRoute.hostname (gt (len .Values.httpRoute.parentRefs) 0) }}
   https://{{ .Values.httpRoute.hostname }}

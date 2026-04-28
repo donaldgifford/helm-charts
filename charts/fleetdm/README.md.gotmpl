@@ -56,20 +56,38 @@ database:
 
 ## Secret Management
 
-The chart generates random credentials by default. Generated secrets use
-`helm.sh/resource-policy: keep` to survive Helm upgrades.
+The chart manages the MySQL Secret only when `database.existingSecret` is
+empty (it then generates random values once and uses Helm's `lookup` to
+preserve them across upgrades; uses `helm.sh/resource-policy: keep`).
 
-To use externally managed secrets (1Password Connect, External Secrets Operator):
+The chart **never** manages the cache (Redis/Valkey) Secret. When
+`cache.usePassword: true`, you must provision the Secret out-of-band and
+set `cache.existingSecret`. This avoids password regeneration under
+`helm template`-driven workflows like ArgoCD without
+`--enable-helm-lookup`, kustomize `helmCharts`, or helmfile diff (see
+[INV-0001][inv-0001]).
 
 ```yaml
 database:
-  existingSecret: fleet-mysql-credentials
+  existingSecret: fleet-mysql-credentials  # optional — chart will manage if empty
   passwordKey: mysql-password
 
 cache:
-  existingSecret: fleet-redis-credentials
+  usePassword: true
+  existingSecret: fleet-redis-credentials  # required when usePassword is true
   passwordKey: redis-password
 ```
+
+Provision externally with External Secrets Operator, 1Password Operator,
+sealed-secrets, or raw `kubectl create secret`:
+
+```sh
+kubectl create secret generic fleet-redis-credentials \
+  --from-literal=redis-password='your-password-here' \
+  -n <namespace>
+```
+
+[inv-0001]: https://github.com/donaldgifford/helm-charts/blob/main/docs/investigation/0001-fleetdm-secret-regeneration-under-helm-template.md
 
 ## Post-Install Validation
 

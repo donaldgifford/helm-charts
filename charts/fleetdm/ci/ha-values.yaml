@@ -15,6 +15,7 @@ database:
 
 cache:
   usePassword: true
+  existingSecret: fleet-redis-stub
 
 httpRoute:
   enabled: false

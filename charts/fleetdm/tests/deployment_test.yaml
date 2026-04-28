@@ -5,6 +5,7 @@ templates:
 set:
   cache:
     address: "redis:6379"
+    existingSecret: "stub-redis-secret"
 tests:
   - it: renders a Deployment
     asserts:

@@ -2,6 +2,9 @@
 suite: valkey
 templates:
   - templates/valkey.yaml
+set:
+  cache:
+    existingSecret: "stub-redis-secret"
 tests:
   - it: does not render when valkey.enabled is false
     set:
@@ -74,3 +77,33 @@ tests:
       - isNull:
           path: spec.template.spec.containers[0].command
         documentIndex: 1
+
+  - it: VALKEY_PASSWORD env references cache.existingSecret
+    set:
+      valkey:
+        enabled: true
+      cache:
+        usePassword: true
+        existingSecret: my-redis-creds
+        passwordKey: redis-password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VALKEY_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-redis-creds
+                key: redis-password
+        documentIndex: 1
+
+  - it: fails when cache.usePassword is true and existingSecret is empty
+    set:
+      valkey:
+        enabled: true
+      cache:
+        usePassword: true
+        existingSecret: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "cache.existingSecret is required when cache.usePassword is true. The chart no longer generates a Redis Secret (see INV-0001 / IMPL-0003). Provision the Secret out-of-band (External Secrets, 1Password Operator, sealed-secrets, or raw kubectl apply)."
