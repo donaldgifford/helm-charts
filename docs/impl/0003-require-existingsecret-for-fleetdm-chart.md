@@ -1,7 +1,7 @@
 ---
 id: IMPL-0003
 title: "Require cache.existingSecret in fleetdm chart"
-status: Draft
+status: InProgress
 author: Donald Gifford
 created: 2026-04-28
 ---
@@ -9,7 +9,7 @@ created: 2026-04-28
 
 # IMPL 0003: Require cache.existingSecret in fleetdm chart
 
-**Status:** Draft
+**Status:** InProgress
 **Author:** Donald Gifford
 **Date:** 2026-04-28
 
@@ -105,10 +105,10 @@ Single-file template change plus the supporting test/doc/values updates.
 
 #### Tasks
 
-- [ ] In `charts/fleetdm/templates/secret.yaml`, remove the entire Redis
+- [x] In `charts/fleetdm/templates/secret.yaml`, remove the entire Redis
       Secret block (the `{{- if and .Values.cache.usePassword (not .Values.cache.existingSecret) }}`
       branch). Leave the MySQL block alone.
-- [ ] In `charts/fleetdm/templates/_helpers.tpl`, extend
+- [x] In `charts/fleetdm/templates/_helpers.tpl`, extend
       `fleetdm.redisSecretName`. Current logic:
       ```
       if .Values.cache.existingSecret → return it
@@ -122,7 +122,7 @@ Single-file template change plus the supporting test/doc/values updates.
       ```
       Failure message:
       `"cache.existingSecret is required when cache.usePassword is true. The chart no longer generates passwords (see INV-0001). Provision the Secret out-of-band."`
-- [ ] Update `charts/fleetdm/tests/secret_test.yaml`:
+- [x] Update `charts/fleetdm/tests/secret_test.yaml`:
   - Drop the `renders Redis secret when cache.usePassword and no existingSecret` test.
   - Drop the `skips Redis secret when cache.existingSecret is set` test (no
     longer relevant — the chart never renders a Redis Secret).
@@ -130,35 +130,35 @@ Single-file template change plus the supporting test/doc/values updates.
     of the assertion (only MySQL left).
   - Update the `renders both secrets with default values` test — there is
     only one secret now (MySQL), so rename and adjust count.
-- [ ] Update `charts/fleetdm/tests/valkey_test.yaml`:
+- [x] Update `charts/fleetdm/tests/valkey_test.yaml`:
   - Find any test that lets the chart fall back to the chart-generated
     Redis Secret name (`<release>-redis`) without setting `cache.existingSecret`.
     Update it to set `cache.existingSecret: my-redis-secret` and assert
     the env-var reference points there.
-- [ ] Update `charts/fleetdm/tests/deployment_test.yaml`:
+- [x] Update `charts/fleetdm/tests/deployment_test.yaml`:
   - Same treatment for any deployment-level test that relies on the
     chart-generated Redis Secret name.
-- [ ] Update `charts/fleetdm/values.yaml` — change the helm-docs comment on
+- [x] Update `charts/fleetdm/values.yaml` — change the helm-docs comment on
       `cache.existingSecret`:
       `Required when cache.usePassword is true. Provision the Secret out-of-band (External Secrets, 1Password Operator, raw kubectl apply, etc.). Must contain a key matching cache.passwordKey.`
-- [ ] Update `charts/fleetdm/templates/NOTES.txt` — if there's any line
+- [x] Update `charts/fleetdm/templates/NOTES.txt` — if there's any line
       referring to the chart auto-generating the cache password, remove or
       adjust it. Add a one-line reminder if appropriate.
-- [ ] Update `charts/fleetdm/README.md.gotmpl` — in the "Secret Management"
+- [x] Update `charts/fleetdm/README.md.gotmpl` — in the "Secret Management"
       section, note that `cache.existingSecret` is required for cache
       password auth (mirror the wording for the eventual `database` fix in
       the follow-up issue).
-- [ ] Update `charts/fleetdm/ci/default-values.yaml` — confirm
+- [x] Update `charts/fleetdm/ci/default-values.yaml` — confirm
       `cache.usePassword: false` so the existing CI values still render
       cleanly without needing a stub Secret. (If `usePassword: true`, add
       `cache.existingSecret: fleet-redis-stub`.)
-- [ ] Update `charts/fleetdm/ci/ha-values.yaml` — same check; add
+- [x] Update `charts/fleetdm/ci/ha-values.yaml` — same check; add
       `cache.existingSecret: fleet-redis-stub` if `usePassword` is true.
-- [ ] Bump `charts/fleetdm/Chart.yaml` `version` from `0.4.3` to `0.4.4`.
-- [ ] Run `make helm-docs`.
-- [ ] Run `make helm-test` and confirm all suites pass.
-- [ ] Run `make helm-ct-lint` and confirm both CI values files pass.
-- [ ] Run `helm template charts/fleetdm` (default values, then with
+- [x] Bump `charts/fleetdm/Chart.yaml` `version` from `0.4.3` to `0.4.4`.
+- [x] Run `make helm-docs`.
+- [x] Run `make helm-test` and confirm all suites pass.
+- [x] Run `make helm-ct-lint` and confirm both CI values files pass.
+- [x] Run `helm template charts/fleetdm` (default values, then with
       `cache.usePassword=true cache.existingSecret=""`) and confirm the
       latter fails with the expected message.
 - [ ] Open the PR. Reference INV-0001 and close issue #16 in the body.
