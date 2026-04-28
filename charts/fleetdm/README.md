@@ -2,7 +2,7 @@
 
 A Helm chart for FleetDM — open-source device management with embedded MySQL and optional Valkey cache
 
-![Version: 0.4.3](https://img.shields.io/badge/Version-0.4.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.4.4](https://img.shields.io/badge/Version-0.4.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -56,20 +56,38 @@ database:
 
 ## Secret Management
 
-The chart generates random credentials by default. Generated secrets use
-`helm.sh/resource-policy: keep` to survive Helm upgrades.
+The chart manages the MySQL Secret only when `database.existingSecret` is
+empty (it then generates random values once and uses Helm's `lookup` to
+preserve them across upgrades; uses `helm.sh/resource-policy: keep`).
 
-To use externally managed secrets (1Password Connect, External Secrets Operator):
+The chart **never** manages the cache (Redis/Valkey) Secret. When
+`cache.usePassword: true`, you must provision the Secret out-of-band and
+set `cache.existingSecret`. This avoids password regeneration under
+`helm template`-driven workflows like ArgoCD without
+`--enable-helm-lookup`, kustomize `helmCharts`, or helmfile diff (see
+[INV-0001][inv-0001]).
 
 ```yaml
 database:
-  existingSecret: fleet-mysql-credentials
+  existingSecret: fleet-mysql-credentials  # optional — chart will manage if empty
   passwordKey: mysql-password
 
 cache:
-  existingSecret: fleet-redis-credentials
+  usePassword: true
+  existingSecret: fleet-redis-credentials  # required when usePassword is true
   passwordKey: redis-password
 ```
+
+Provision externally with External Secrets Operator, 1Password Operator,
+sealed-secrets, or raw `kubectl create secret`:
+
+```sh
+kubectl create secret generic fleet-redis-credentials \
+  --from-literal=redis-password='your-password-here' \
+  -n <namespace>
+```
+
+[inv-0001]: https://github.com/donaldgifford/helm-charts/blob/main/docs/investigation/0001-fleetdm-secret-regeneration-under-helm-template.md
 
 ## Post-Install Validation
 
@@ -90,7 +108,7 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | cache.address | string | `""` | Cache server address (auto-derived from Valkey when empty and valkey.enabled is true) |
 | cache.database | string | `"0"` | Redis database number |
-| cache.existingSecret | string | `""` | Name of an existing secret containing the cache password |
+| cache.existingSecret | string | `""` | Name of an existing Secret containing the cache password (required when cache.usePassword is true; chart no longer generates one — see INV-0001) |
 | cache.passwordKey | string | `"redis-password"` | Key in the cache secret that holds the password |
 | cache.usePassword | bool | `true` | Enable password authentication for cache |
 | database.address | string | `""` | MySQL server address (auto-derived from embedded MySQL when empty and mysql.enabled is true) |
