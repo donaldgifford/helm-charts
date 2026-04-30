@@ -3,6 +3,30 @@ entries:
   fleetdm:
   - apiVersion: v2
     appVersion: 4.82.0
+    created: "2026-04-30T14:56:58.89537782Z"
+    description: A Helm chart for FleetDM — open-source device management with embedded
+      MySQL and optional Valkey cache
+    digest: 575bc20e5fd5a4a568e5c829bfd29da8c86387d5f40fbc3c0387b4247180bb41
+    home: https://fleetdm.com
+    keywords:
+    - fleetdm
+    - fleet
+    - mdm
+    - osquery
+    - device-management
+    maintainers:
+    - name: Donald Gifford
+      url: https://github.com/donaldgifford
+    name: fleetdm
+    sources:
+    - https://github.com/fleetdm/fleet
+    - https://github.com/donaldgifford/helm-charts
+    type: application
+    urls:
+    - https://github.com/donaldgifford/helm-charts/releases/download/fleetdm-0.4.4/fleetdm-0.4.4.tgz
+    version: 0.4.4
+  - apiVersion: v2
+    appVersion: 4.82.0
     created: "2026-04-04T18:52:02.641100143Z"
     description: A Helm chart for FleetDM — open-source device management with embedded
       MySQL and optional Valkey cache
@@ -289,4 +313,4 @@ entries:
     urls:
     - https://github.com/donaldgifford/helm-charts/releases/download/fleetdm-0.1.0/fleetdm-0.1.0.tgz
     version: 0.1.0
-generated: "2026-04-04T18:52:02.641148733Z"
+generated: "2026-04-30T14:56:58.895472738Z"
