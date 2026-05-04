@@ -34,4 +34,5 @@ docz create design "Your Design Title"
 |----|-------|--------|------|--------|------|
 | DESIGN-0001 | FleetDM Helm Chart | Implemented | 2026-03-15 | Donald Gifford | [0001-fleetdm-helm-chart.md](0001-fleetdm-helm-chart.md) |
 | DESIGN-0002 | Backstage Helm Chart | Draft | 2026-03-29 | Donald Gifford | [0002-backstage-helm-chart.md](0002-backstage-helm-chart.md) |
+| DESIGN-0003 | Langfuse Helm chart | Accepted | 2026-05-04 | Donald Gifford | [0003-langfuse-helm-chart.md](0003-langfuse-helm-chart.md) |
 <!-- END DOCZ AUTO-GENERATED -->
