@@ -293,33 +293,42 @@ Add the optional north-south path. Both shapes live under
 
 #### Tasks
 
-- [ ] Create `charts/chartdb/templates/ingress.yaml`. Guards:
+- [x] Create `charts/chartdb/templates/ingress.yaml`. Guards:
       `chartdb.ingress.enabled` AND non-empty
       `chartdb.ingress.hosts`. Renders classic `Ingress` with
       `className`, `annotations`, hosts/paths, TLS — same shape as
       fleetdm.
-- [ ] Create `charts/chartdb/templates/httproute.yaml`. Guards:
+- [x] Create `charts/chartdb/templates/httproute.yaml`. Guards:
       `chartdb.httpRoute.enabled` AND non-empty
       `chartdb.httpRoute.parentRefs`. Vanilla
       `gateway.networking.k8s.io/v1` `HTTPRoute` referencing the
       Service on port 80.
-- [ ] Create `charts/chartdb/templates/certificate.yaml`. Guards:
-      `chartdb.httpRoute.certManager.enabled`. cert-manager
-      `Certificate` referencing the configured `clusterIssuer`,
-      `dnsNames: [hostname]`, `secretName` for the TLS cert.
-- [ ] Add `charts/chartdb/tests/ingress_test.yaml`:
+- [x] Create `charts/chartdb/templates/certificate.yaml`. Guards:
+      `chartdb.httpRoute.enabled` AND
+      `chartdb.httpRoute.certManager.enabled` (split into its own
+      file rather than co-rendered with httproute.yaml — keeps the
+      cert-manager dep visually distinct from the Gateway API dep).
+      cert-manager `Certificate` referencing the configured
+      `clusterIssuer`, `dnsNames: [hostname]`, `secretName` for the
+      TLS cert. Defaults metadata.name and secretName to
+      `<fullname>-tls`, overridable via `certificateName`.
+- [x] Add `charts/chartdb/tests/ingress_test.yaml`:
   - Renders only when enabled AND hosts non-empty.
   - className, annotations, hosts, paths, TLS pass through.
-- [ ] Add `charts/chartdb/tests/httproute_test.yaml`:
+- [x] Add `charts/chartdb/tests/httproute_test.yaml`:
   - Renders only when enabled AND parentRefs non-empty (safe-default
     pattern matching fleetdm/langfuse).
   - Hostname, parentRefs, port-80 backend ref correct.
-- [ ] Add `charts/chartdb/tests/certificate_test.yaml`:
+- [x] Add `charts/chartdb/tests/certificate_test.yaml`:
   - Renders only when cert-manager block enabled.
   - clusterIssuer, dnsNames, secretName correct.
-- [ ] Run `make helm-test`, confirm.
-- [ ] Render each combination with `helm template` and eyeball.
-- [ ] Commit `chart(chartdb): add ingress and gateway api templates`.
+- [x] Run `make helm-test`, confirm. (17 suites / 144 tests pass.)
+- [x] Render each combination with `helm template` and eyeball.
+      Default render emits no Ingress (hosts empty) and no HTTPRoute
+      (disabled). With hosts configured, Ingress renders correctly;
+      with httpRoute + certManager enabled, both HTTPRoute and
+      Certificate render with `<fullname>-tls` defaults.
+- [x] Commit `chart(chartdb): add ingress and gateway api templates`.
 
 #### Success Criteria
 

@@ -1,0 +1,121 @@
+---
+suite: ingress
+templates:
+  - templates/ingress.yaml
+tests:
+  - it: does not render by default (hosts empty)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when disabled even if hosts set
+    set:
+      chartdb:
+        ingress:
+          enabled: false
+          hosts:
+            - host: chartdb.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders Ingress when enabled with hosts
+    set:
+      chartdb:
+        ingress:
+          enabled: true
+          hosts:
+            - host: chartdb.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].host
+          value: chartdb.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 80
+
+  - it: passes className through
+    set:
+      chartdb:
+        ingress:
+          enabled: true
+          className: nginx
+          hosts:
+            - host: chartdb.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+
+  - it: passes annotations through
+    set:
+      chartdb:
+        ingress:
+          enabled: true
+          annotations:
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
+          hosts:
+            - host: chartdb.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+    asserts:
+      - equal:
+          path: metadata.annotations["nginx.ingress.kubernetes.io/ssl-redirect"]
+          value: "true"
+
+  - it: renders TLS block when configured
+    set:
+      chartdb:
+        ingress:
+          enabled: true
+          hosts:
+            - host: chartdb.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: chartdb-tls
+              hosts:
+                - chartdb.example.com
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: chartdb-tls
+      - equal:
+          path: spec.tls[0].hosts[0]
+          value: chartdb.example.com
+
+  - it: service port follows chartdb.service.port override
+    set:
+      chartdb:
+        service:
+          port: 8080
+        ingress:
+          enabled: true
+          hosts:
+            - host: chartdb.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080
