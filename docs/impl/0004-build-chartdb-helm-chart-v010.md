@@ -1,7 +1,7 @@
 ---
 id: IMPL-0004
 title: "Build chartdb helm chart v0.1.0"
-status: Draft
+status: InProgress
 author: Donald Gifford
 created: 2026-05-24
 ---
@@ -9,11 +9,12 @@ created: 2026-05-24
 
 # IMPL 0004: Build chartdb helm chart v0.1.0
 
-**Status:** Draft
+**Status:** InProgress
 **Author:** Donald Gifford
 **Date:** 2026-05-24
 
 <!--toc:start-->
+- [Decisions](#decisions)
 - [Objective](#objective)
 - [Scope](#scope)
   - [In Scope](#in-scope)
@@ -40,6 +41,22 @@ created: 2026-05-24
 - [Open Questions](#open-questions)
 - [References](#references)
 <!--toc:end-->
+
+## Decisions
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Exact list of `emptyDir` paths needed for `readOnlyRootFilesystem: true`? | Start with `/etc/nginx/conf.d/`, `/var/cache/nginx/`, `/var/run/`, `/tmp/`. Audit live in Phase 2 by `helm install` into Kind and reading pod logs for permission errors. Add paths as needed and document the final list in `values.yaml` comments. Escalate if `/usr/share/nginx/html/` (static-asset path) is required. |
+| 2 | helm-test target path? | `curl /` (SPA index). Matches the readiness probe; `/config.js` may 404 transiently if the entrypoint hasn't rendered it yet. |
+| 3 | Extensibility hooks (`additionalEnv`, `extraContainers`, `extraVolumes`, etc.) in v0.1? | Ship them. Zero template cost, matches the langfuse chart, supports power users who want sidecars. |
+| 4 | `emptyDir` size limits? | Leave defaults in v0.1. nginx caches are tiny. |
+| 5 | nginx tuning knobs (worker_processes, worker_connections)? | Skip in v0.1. Users who need tuning override via `extraContainers` + custom args. |
+| 6 | Deployment naming? | `<release>-chartdb` via `chartdb.fullname` helper. Consistent with other charts in this repo. |
+| 7 | OpenAI literal-value env vars: render only when non-empty, or always render? | Render only when non-empty. Upstream's `default.conf.template` treats unset and empty the same, so we save noise. |
+| 8 | `HIDE_CHARTDB_CLOUD` / `DISABLE_ANALYTICS` env shape? | String `"true"` / `"false"`. nginx env templating is string-only. |
+| 9 | Should `ct.yaml` change to accommodate the new chart? | No. chartdb is small and fast; use defaults. |
+| 10 | NOTES.txt — include `kubectl port-forward` for default install? | Yes — `kubectl port-forward svc/<fullname> 8080:80` plus `open http://localhost:8080`. |
+| 11 | Expose Service-level `nodePort` value for `NodePort` Service type? | No. Keep values surface small; users override via post-render patch if needed. |
 
 ## Objective
 
@@ -457,22 +474,7 @@ dependencies), then ship.
 
 ## Open Questions
 
-> Resolve before or during the relevant phase. Each has a recommended
-> default; mark "OK" / "change" inline.
-
-| # | Question | My recommendation |
-|---|---|---|
-| 1 | Exact list of `emptyDir` paths needed for `readOnlyRootFilesystem: true`? Initial guess: `/etc/nginx/conf.d/`, `/var/cache/nginx/`, `/var/run/`, `/tmp/`. | Start with that set; audit live in Phase 2 by `helm install` into Kind and reading pod logs for permission errors. Add paths as needed and document the final list. If the audit shows we'd need to mount over `/usr/share/nginx/html/` (the static-asset path), that's a deeper problem — escalate. |
-| 2 | helm-test target path: `curl /` (SPA index) or `curl /config.js` (the env-var-injected file)? | `/` — simpler, matches the readiness probe. `/config.js` may 404 transiently if the entrypoint hasn't rendered it yet. |
-| 3 | Should `additionalEnv` / `extraContainers` / `extraVolumes` extensibility ship in v0.1, or strip down? | Ship them — zero template cost, matches the langfuse chart, supports power users who want sidecars. |
-| 4 | `emptyDir` size limits? | Leave defaults in v0.1. nginx caches are tiny. |
-| 5 | nginx tuning knobs (worker_processes, worker_connections)? | Skip in v0.1. Users who need tuning override via `extraContainers` + custom args. |
-| 6 | Deployment naming: `<release>-chartdb` or just `<release>` (since there's only one deployment)? | `<release>-chartdb` — Helm convention via `chartdb.fullname` helper. Consistent with the other charts in this repo. |
-| 7 | OpenAI literal-value env vars (`OPENAI_API_ENDPOINT`, `LLM_MODEL_NAME`): render only when non-empty, or always render with empty string? | Render only when non-empty. Don't emit empty envs — the upstream's `default.conf.template` treats unset and empty as the same, so we save noise. |
-| 8 | `HIDE_CHARTDB_CLOUD` / `DISABLE_ANALYTICS` env shape: boolean values rendered as `"true"` / `"false"` strings, or as the bool literal? | String `"true"` / `"false"`. nginx env templating is string-only — boolean YAML would be coerced to the string anyway, but being explicit is clearer. |
-| 9 | Should `ct.yaml` change at all (e.g., adjust install timeout) to accommodate the new chart? | No — chartdb is small and fast. Use defaults. |
-| 10 | NOTES.txt — include a `kubectl port-forward` line for default install (no Ingress configured)? | Yes — `kubectl port-forward svc/<fullname> 8080:80` plus `open http://localhost:8080`. |
-| 11 | Service `port: 80, targetPort: 80` is confirmed in DESIGN-0003 Decision §1. Should we also expose a Service-level `nodePort` value for `NodePort` Service type? | No — let users override via post-render patch or `extraManifests`-style escape hatch. Keep values surface small. |
+None remaining. All resolved in the [Decisions](#decisions) table.
 
 ## References
 
