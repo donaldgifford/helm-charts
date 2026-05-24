@@ -29,6 +29,7 @@ created: 2026-05-24
 - [API / Interface Changes](#api--interface-changes)
 - [Testing Strategy](#testing-strategy)
 - [Migration / Rollout Plan](#migration--rollout-plan)
+- [Future Considerations](#future-considerations)
 - [Open Questions](#open-questions)
 - [References](#references)
 <!--toc:end-->
@@ -389,6 +390,25 @@ Renovate annotation per the repo convention:
 # renovate: image=ghcr.io/chartdb/chartdb
 appVersion: "1.20.1"
 ```
+
+## Future Considerations
+
+- **Drop `NET_BIND_SERVICE` via an init container** *(v0.2 candidate)*.
+  An init container could `sed` upstream's `default.conf.template` to
+  rewrite `listen 80` → `listen 8080` and write the modified template
+  to a shared `emptyDir` that the main container mounts over
+  `/etc/nginx/conf.d/`. The main container would then run with
+  `targetPort: 8080` and drop the `NET_BIND_SERVICE` capability
+  entirely; Service stays `port: 80`, `targetPort: 8080`. Trade-off:
+  the chart would couple to upstream's template layout and every
+  ChartDB release that touches `default.conf.template` becomes a
+  potential break. Justified only if a consumer hits a cluster policy
+  (OPA/Kyverno) that forbids capability additions including
+  `NET_BIND_SERVICE`. Until then, `NET_BIND_SERVICE` is fully PSS-
+  Restricted-compliant and is the cleaner default.
+- **HPA / autoscaling**. ChartDB is genuinely stateless, so a basic
+  CPU-target HPA is a trivial later add. Deferred from v0.1 to match
+  the rest of the repo.
 
 ## Open Questions
 
