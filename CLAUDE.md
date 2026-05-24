@@ -74,6 +74,17 @@ appVersion: "4.82.0"
 
 ## Charts
 
+### chartdb
+ChartDB Helm chart — a slim stateless wrapper around the upstream `ghcr.io/chartdb/chartdb` image.
+- Single Deployment + ClusterIP Service. No backing services (no Postgres, Redis, ClickHouse, S3 — ChartDB is purely browser-side).
+- All app-shaped values namespaced under `chartdb.*`; only `nameOverride`/`fullnameOverride` at top level.
+- Non-root nginx (uid 101) + `capabilities: drop ALL, add NET_BIND_SERVICE` so we can bind `:80` while staying PSS-Restricted-compliant.
+- `readOnlyRootFilesystem: true` with `emptyDir` mounts over the writable paths the upstream entrypoint and nginx need (`/etc/nginx/conf.d/`, `/var/cache/nginx/`, `/var/run/`, `/tmp/` — exact list audited in IMPL-0004 Phase 2).
+- `OPENAI_API_KEY` (for ChartDB's AI features) is `existingSecret`-only — helper `chartdb.openaiSecretName` fails closed when `chartdb.openai.enabled: true` without a Secret name (per INV-0001 pattern).
+- Classic `Ingress` (default-on, guarded on non-empty `hosts`) and vanilla Gateway API `HTTPRoute` (default-off, guarded on non-empty `parentRefs`) under `chartdb.ingress.*` and `chartdb.httpRoute.*`.
+- Replicas only — no HPA/KEDA/VPA/PDB in v0.1 (init-container approach to drop NET_BIND_SERVICE is tracked as a v0.2 Future Consideration in DESIGN-0003).
+- `ct install` in Kind is feasible (no external deps); planned for IMPL-0004 Phase 5.
+
 ### fleetdm
 FleetDM device management chart with embedded MySQL StatefulSet and optional Valkey cache.
 - Embedded MySQL StatefulSet (replaced PXC operator in 0.4.0; PXC Galera doesn't support `LOCK=NONE` migrations)

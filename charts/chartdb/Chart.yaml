@@ -1,0 +1,23 @@
+---
+apiVersion: v2
+name: chartdb
+description: A Helm chart for ChartDB — open-source database diagram editor
+type: application
+version: 0.1.0
+# renovate: image=ghcr.io/chartdb/chartdb
+appVersion: "1.20.1"
+home: https://chartdb.io
+sources:
+  - https://github.com/chartdb/chartdb
+  - https://github.com/donaldgifford/helm-charts
+keywords:
+  - chartdb
+  - database
+  - schema
+  - diagram
+  - erd
+  - visualization
+maintainers:
+  - name: Donald Gifford
+    url: https://github.com/donaldgifford
+dependencies: []

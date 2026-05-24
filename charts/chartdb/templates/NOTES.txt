@@ -1,0 +1,4 @@
+ChartDB has been deployed!
+
+(Phase 4 will replace this NOTES.txt with kubectl port-forward instructions,
+URL hints, OpenAI Secret reminders, and helm-test usage.)

@@ -135,7 +135,7 @@ later phase.
 
 #### Tasks
 
-- [ ] Create `charts/chartdb/Chart.yaml`:
+- [x] Create `charts/chartdb/Chart.yaml`:
   - `apiVersion: v2`
   - `name: chartdb`
   - `description: A Helm chart for ChartDB — open-source database diagram editor`
@@ -147,33 +147,33 @@ later phase.
   - `keywords: [chartdb, database, schema, diagram, erd, visualization]`
   - `maintainers: [Donald Gifford]`
   - `dependencies: []`
-- [ ] Create `charts/chartdb/.helmignore` (mirror fleetdm).
-- [ ] Create `charts/chartdb/values.yaml` matching DESIGN-0003 §API
+- [x] Create `charts/chartdb/.helmignore` (mirror fleetdm).
+- [x] Create `charts/chartdb/values.yaml` matching DESIGN-0003 §API
       shape, with `--` comments for every user-facing knob (helm-docs
       format). Document `existingSecret` requirement explicitly for
       `chartdb.openai`.
-- [ ] Create `charts/chartdb/values.schema.json` with at minimum:
+- [x] Create `charts/chartdb/values.schema.json` with at minimum:
   - `chartdb.service.type`: `enum: ["ClusterIP", "NodePort", "LoadBalancer"]`
   - `chartdb.image.pullPolicy`: `enum: ["Always", "IfNotPresent", "Never"]`
   - `chartdb.replicaCount`: `type: integer, minimum: 0`
-- [ ] Create `charts/chartdb/templates/_helpers.tpl` with the
+- [x] Create `charts/chartdb/templates/_helpers.tpl` with the
       standard Helm name helpers: `chartdb.name`, `chartdb.fullname`,
       `chartdb.chart`, `chartdb.labels`, `chartdb.selectorLabels`,
       `chartdb.serviceAccountName`. Plus a custom helper
       `chartdb.openaiSecretName` that fails closed when
       `chartdb.openai.enabled: true` AND `existingSecret` empty.
-- [ ] Create `charts/chartdb/templates/serviceaccount.yaml` (renders
+- [x] Create `charts/chartdb/templates/serviceaccount.yaml` (renders
       under `chartdb.serviceAccount.create: true`,
       `automountServiceAccountToken: false` by default).
-- [ ] Create `charts/chartdb/templates/NOTES.txt` placeholder
+- [x] Create `charts/chartdb/templates/NOTES.txt` placeholder
       (full content in Phase 4).
-- [ ] Create `charts/chartdb/README.md.gotmpl` placeholder
+- [x] Create `charts/chartdb/README.md.gotmpl` placeholder
       (full content in Phase 4).
-- [ ] Run `make helm-docs` to generate `charts/chartdb/README.md`.
-- [ ] Run `make helm-lint` and confirm clean.
-- [ ] Run `make helm-template` and confirm only the ServiceAccount
+- [x] Run `make helm-docs` to generate `charts/chartdb/README.md`.
+- [x] Run `make helm-lint` and confirm clean.
+- [x] Run `make helm-template` and confirm only the ServiceAccount
       renders for default values.
-- [ ] Commit `chart(chartdb): scaffold chart skeleton`.
+- [x] Commit `chart(chartdb): scaffold chart skeleton`.
 
 #### Success Criteria
 
