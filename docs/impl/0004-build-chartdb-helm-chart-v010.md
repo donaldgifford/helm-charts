@@ -195,7 +195,7 @@ writable paths here).
 
 #### Tasks
 
-- [ ] Create `charts/chartdb/templates/deployment.yaml`. Renders the
+- [x] Create `charts/chartdb/templates/deployment.yaml`. Renders the
       single Deployment with:
   - Image: `ghcr.io/chartdb/chartdb` + `chartdb.image.tag` (or
     appVersion fallback).
@@ -225,10 +225,10 @@ writable paths here).
     `extraLifecycle` all merge in.
   - nodeSelector, tolerations, affinity,
     topologySpreadConstraints, podAnnotations, podLabels.
-- [ ] Create `charts/chartdb/templates/service.yaml`. ClusterIP on
+- [x] Create `charts/chartdb/templates/service.yaml`. ClusterIP on
       `chartdb.service.port` (default 80) → `targetPort: 80`. Always
       renders.
-- [ ] Add `charts/chartdb/tests/deployment_test.yaml`:
+- [x] Add `charts/chartdb/tests/deployment_test.yaml`:
   - Default values render the Deployment with expected image,
     replicas, port, probes, securityContext, capabilities.
   - emptyDir volumes mounted at the four required paths.
@@ -246,24 +246,32 @@ writable paths here).
   - `additionalEnv` merges into env list.
   - `additionalEnvFrom` merges into envFrom list.
   - nodeSelector/tolerations/affinity pass through.
-- [ ] Add `charts/chartdb/tests/service_test.yaml`:
+- [x] Add `charts/chartdb/tests/service_test.yaml`:
   - Renders ClusterIP on port 80 by default.
   - Selector matches Deployment's labels.
   - Port name `http`, targetPort 80.
-- [ ] Add `charts/chartdb/tests/helpers_test.yaml`:
+- [x] Add `charts/chartdb/tests/helpers_test.yaml`:
   - `chartdb.openaiSecretName` returns existingSecret when set.
   - `chartdb.openaiSecretName` fails closed when enabled with no
     secret.
   - Standard name/fullname helpers behave per Helm convention.
-- [ ] Validate the read-only-rootfs + NET_BIND_SERVICE combo
+- [x] Validate the read-only-rootfs + NET_BIND_SERVICE combo
       against the actual upstream image (manual `helm install` into
-      Kind, observe pod logs for permission errors). If the
-      upstream entrypoint writes to a path we haven't mounted as
-      `emptyDir`, add it to the volumes list and re-test. Document
-      the final list in `values.yaml` comments.
-- [ ] Run `make helm-test`, confirm.
-- [ ] Run `make helm-template charts/chartdb`, eyeball.
-- [ ] Commit `chart(chartdb): add deployment and service`.
+      Kind). **Discovery:** upstream's `default.conf.template` lives
+      at `/etc/nginx/conf.d/default.conf.template` in the image.
+      Mounting an `emptyDir` over that directory masks the template
+      and the entrypoint's envsubst fails. **Fix:** added a
+      `seed-nginx-template` init container that copies the template
+      from the image into the shared `emptyDir` before the main
+      container starts. Verified end-to-end in Kind: pod
+      `Running 1/1`, probes returning 200, `curl /` returns the
+      SPA `index.html` (2124 bytes), no permission errors. The four
+      writable paths (`/etc/nginx/conf.d/`, `/var/cache/nginx/`,
+      `/var/run/`, `/tmp/`) are sufficient.
+- [x] Run `make helm-test`, confirm. (123/123 tests pass.)
+- [x] Run `make helm-template charts/chartdb`, eyeball. (ServiceAccount
+      + Service + Deployment with seed-nginx-template init container.)
+- [x] Commit `chart(chartdb): add deployment and service`.
 
 #### Success Criteria
 
