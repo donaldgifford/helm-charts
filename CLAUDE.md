@@ -83,8 +83,9 @@ ChartDB Helm chart — a slim stateless wrapper around the upstream `ghcr.io/cha
 - `OPENAI_API_KEY` (for ChartDB's AI features) is `existingSecret`-only — helper `chartdb.openaiSecretName` fails closed when `chartdb.openai.enabled: true` without a Secret name (per INV-0001 pattern).
 - Classic `Ingress` (default-on, guarded on non-empty `hosts`) and vanilla Gateway API `HTTPRoute` (default-off, guarded on non-empty `parentRefs`) under `chartdb.ingress.*` and `chartdb.httpRoute.*`. Optional cert-manager `Certificate` for HTTPRoute TLS in its own template (defaults to `<fullname>-tls` for both `metadata.name` and `secretName`, overridable via `certManager.certificateName`).
 - Replicas only — no HPA/KEDA/VPA/PDB in v0.1 (init-container approach to drop NET_BIND_SERVICE is tracked as a v0.2 Future Consideration in DESIGN-0003).
-- 7 unit test suites (~50 tests as of Phase 3) in `charts/chartdb/tests/`.
-- `ct install` in Kind is feasible (no external deps); planned for IMPL-0004 Phase 5.
+- 7 unit test suites (49 tests) in `charts/chartdb/tests/`.
+- CI values: `ci/default-values.yaml` (no Ingress/HTTPRoute, OpenAI off) and `ci/openai-values.yaml` (OpenAI on with `existingSecret: chartdb-openai-stub`). For local `ct install` with openai-values to succeed, pre-create the stub Secret in the install namespace.
+- `ct install` in Kind is feasible (no external deps) and validated locally end-to-end (both CI values files install cleanly, helm test returns 200 against `/`). `ct install` remains disabled repo-wide in CI pending a multi-chart strategy.
 
 ### fleetdm
 FleetDM device management chart with embedded MySQL StatefulSet and optional Valkey cache.

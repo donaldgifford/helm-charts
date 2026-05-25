@@ -1,7 +1,7 @@
 ---
 id: IMPL-0004
 title: "Build chartdb helm chart v0.1.0"
-status: InProgress
+status: Complete
 author: Donald Gifford
 created: 2026-05-24
 ---
@@ -9,9 +9,10 @@ created: 2026-05-24
 
 # IMPL 0004: Build chartdb helm chart v0.1.0
 
-**Status:** InProgress
+**Status:** Complete
 **Author:** Donald Gifford
 **Date:** 2026-05-24
+**Merged:** 2026-05-25 via PR #26 (squash → `89cd7f8`)
 
 <!--toc:start-->
 - [Decisions](#decisions)
@@ -414,19 +415,19 @@ dependencies), then ship.
       `openai-values.yaml` install cleanly; helm test (curl probe)
       returns `200 2124` against the SPA `/`.
 - [x] Run `make helm-docs-check`, confirm clean.
-- [ ] Push branch.
-- [ ] Open the PR. Reference DESIGN-0003 in the body.
-- [ ] Confirm all CI jobs go green:
-  - Helm Lint
-  - Helm Unit Tests
-  - Helm Docs Check
-  - Security Scan (Trivy)
-  - Chart Testing (`ct lint` — `ct install` remains disabled
+- [x] Push branch.
+- [x] Open the PR (#26). References DESIGN-0003 in the body.
+- [x] Confirm all CI jobs go green:
+  - [x] Helm Lint
+  - [x] Helm Unit Tests
+  - [x] Helm Docs Check
+  - [x] Security Scan (Trivy)
+  - [x] Chart Testing (`ct lint` — `ct install` remains disabled
     repo-wide; tracked separately; chartdb itself is `ct install`
     ready locally and would pass once the wiring lands.)
-  - Chart Version Check
-  - Validate Renovate Config
-- [ ] Merge.
+  - [x] Chart Version Check
+  - [x] Validate Renovate Config
+- [x] Merge (squash → `89cd7f8`).
 
 #### Success Criteria
 
