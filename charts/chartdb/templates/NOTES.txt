@@ -1,4 +1,26 @@
 ChartDB has been deployed!
 
-(Phase 4 will replace this NOTES.txt with kubectl port-forward instructions,
-URL hints, OpenAI Secret reminders, and helm-test usage.)
+{{- if .Values.chartdb.openai.enabled }}
+
+NOTE: chartdb.openai.enabled is true, so chartdb.openai.existingSecret
+  must reference a Secret containing the OpenAI API key under key
+  "{{ .Values.chartdb.openai.apiKeyKey }}". The chart does NOT
+  auto-generate this Secret (see INV-0001). Provision it with External
+  Secrets, 1Password Operator, sealed-secrets, or
+  `kubectl create secret`.
+{{- end }}
+
+Get the ChartDB URL:
+{{- if and .Values.chartdb.httpRoute.enabled .Values.chartdb.httpRoute.hostname (gt (len .Values.chartdb.httpRoute.parentRefs) 0) }}
+  https://{{ .Values.chartdb.httpRoute.hostname }}
+{{- else if and .Values.chartdb.ingress.enabled (gt (len .Values.chartdb.ingress.hosts) 0) }}
+  {{- range .Values.chartdb.ingress.hosts }}
+  http://{{ .host }}
+  {{- end }}
+{{- else }}
+  kubectl port-forward svc/{{ include "chartdb.fullname" . }} 8080:{{ .Values.chartdb.service.port }} -n {{ .Release.Namespace }}
+  open http://localhost:8080
+{{- end }}
+
+Run the test suite:
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

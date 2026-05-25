@@ -347,13 +347,13 @@ Make the chart usable and understandable.
 
 #### Tasks
 
-- [ ] Create `charts/chartdb/templates/tests/test-connection.yaml`
+- [x] Create `charts/chartdb/templates/tests/test-connection.yaml`
       — `helm.sh/hook: test` Pod that runs `curl -fsS
       http://<fullname>:80/` (the SPA index). Hook policies
       `before-hook-creation,hook-succeeded`. Full pod + container
       security context (matches the fleetdm test pod's Trivy-clean
       shape).
-- [ ] Write `charts/chartdb/templates/NOTES.txt`:
+- [x] Write `charts/chartdb/templates/NOTES.txt`:
   - One-line congrats.
   - kubectl port-forward example for default install (no Ingress
     configured): `kubectl port-forward svc/<fullname> 8080:80`.
@@ -361,7 +361,7 @@ Make the chart usable and understandable.
   - Reminder: `chartdb.openai.existingSecret` required if
     `chartdb.openai.enabled: true`.
   - `helm test <release>` instruction.
-- [ ] Write `charts/chartdb/README.md.gotmpl`. Sections:
+- [x] Write `charts/chartdb/README.md.gotmpl`. Sections:
   - Prerequisites table (K8s, Helm, optional Gateway API CRDs,
     optional cert-manager).
   - Installation snippets (default / Ingress / Gateway API /
@@ -370,9 +370,10 @@ Make the chart usable and understandable.
   - Secret management section (linking INV-0001).
   - Post-install validation (`helm test`).
   - chart-template-rendered values table.
-- [ ] Run `make helm-docs`, commit the regenerated `README.md`.
-- [ ] Run `make helm-docs-check`, confirm clean.
-- [ ] Commit `chart(chartdb): add helm-test hook, notes, and readme`.
+- [x] Run `make helm-docs`, commit the regenerated `README.md`.
+- [x] Run `make helm-docs-check`, confirm clean (after the
+      regenerated README is staged — the target uses `git diff`).
+- [x] Commit `chart(chartdb): add helm-test hook, notes, and readme`.
 
 #### Success Criteria
 
