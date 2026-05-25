@@ -2,7 +2,7 @@
 
 A Helm chart for FleetDM — open-source device management with embedded MySQL and optional Valkey cache
 
-![Version: 0.4.4](https://img.shields.io/badge/Version-0.4.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
+![Version: 0.4.5](https://img.shields.io/badge/Version-0.4.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.82.0](https://img.shields.io/badge/AppVersion-4.82.0-informational?style=flat-square)
 
 ## Prerequisites
 
@@ -191,7 +191,7 @@ This runs MySQL connectivity, cache connectivity, and Fleet `/healthz` checks.
 | tolerations | list | `[]` | Tolerations for Fleet pods |
 | valkey.enabled | bool | `false` | Deploy an embedded Valkey (Redis-compatible) instance |
 | valkey.image.repository | string | `"valkey/valkey"` | Valkey image repository |
-| valkey.image.tag | string | `"9.0.3"` | Valkey image tag |
+| valkey.image.tag | string | `"9.0.4"` | Valkey image tag |
 | valkey.persistence.enabled | bool | `false` | Enable persistent storage for Valkey |
 | valkey.persistence.size | string | `"1Gi"` | Valkey PVC size |
 | valkey.persistence.storageClassName | string | `""` | Valkey storage class name (uses cluster default when empty) |
