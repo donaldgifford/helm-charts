@@ -394,19 +394,26 @@ dependencies), then ship.
 
 #### Tasks
 
-- [ ] Create `charts/chartdb/ci/default-values.yaml`:
+- [x] Create `charts/chartdb/ci/default-values.yaml`:
   - Minimal overrides for CI: reduced resources, `ingress.enabled:
     false` (no controller in CI), `httpRoute.enabled: false`.
-- [ ] Create `charts/chartdb/ci/openai-values.yaml`:
+- [x] Create `charts/chartdb/ci/openai-values.yaml`:
   - `chartdb.openai.enabled: true`, `existingSecret:
-    chartdb-openai-stub`, the rest minimal.
-- [ ] Verify `ct.yaml` includes `chartdb` (no `excludeCharts` lever
+    chartdb-openai-stub`, the rest minimal. Note: for `ct install`
+    to succeed, the stub Secret must exist in the install namespace.
+    Locally validated by pre-creating it: `kubectl create secret
+    generic chartdb-openai-stub --from-literal=openai-api-key=...`
+    then `ct install --namespace chartdb-test`.
+- [x] Verify `ct.yaml` includes `chartdb` (no `excludeCharts` lever
       needed — unlike langfuse, chartdb supports `ct install`).
-- [ ] Run `make helm-test`, confirm all unit suites pass.
-- [ ] Run `make helm-ct-lint` locally with both CI configs.
-- [ ] Run `make helm-ct-install` locally in Kind, confirm install
-      succeeds and helm test passes.
-- [ ] Run `make helm-docs-check`, confirm clean.
+- [x] Run `make helm-test`, confirm all unit suites pass. (17 suites
+      / 144 tests.)
+- [x] Run `make helm-ct-lint` locally with both CI configs.
+- [x] Run `make helm-ct-install` locally in Kind, confirm install
+      succeeds and helm test passes. Both `default-values.yaml` and
+      `openai-values.yaml` install cleanly; helm test (curl probe)
+      returns `200 2124` against the SPA `/`.
+- [x] Run `make helm-docs-check`, confirm clean.
 - [ ] Push branch.
 - [ ] Open the PR. Reference DESIGN-0003 in the body.
 - [ ] Confirm all CI jobs go green:
@@ -414,7 +421,9 @@ dependencies), then ship.
   - Helm Unit Tests
   - Helm Docs Check
   - Security Scan (Trivy)
-  - Chart Testing (`ct lint` + `ct install` in Kind)
+  - Chart Testing (`ct lint` — `ct install` remains disabled
+    repo-wide; tracked separately; chartdb itself is `ct install`
+    ready locally and would pass once the wiring lands.)
   - Chart Version Check
   - Validate Renovate Config
 - [ ] Merge.
