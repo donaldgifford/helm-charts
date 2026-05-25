@@ -1,5 +1,30 @@
 apiVersion: v1
 entries:
+  chartdb:
+  - apiVersion: v2
+    appVersion: 1.20.1
+    created: "2026-05-25T11:14:18.842564036Z"
+    description: A Helm chart for ChartDB — open-source database diagram editor
+    digest: ef6c214428786817f83553d7f512c6a64a17ec15a6d5d55ad9618ec3318b2f0c
+    home: https://chartdb.io
+    keywords:
+    - chartdb
+    - database
+    - schema
+    - diagram
+    - erd
+    - visualization
+    maintainers:
+    - name: Donald Gifford
+      url: https://github.com/donaldgifford
+    name: chartdb
+    sources:
+    - https://github.com/chartdb/chartdb
+    - https://github.com/donaldgifford/helm-charts
+    type: application
+    urls:
+    - https://github.com/donaldgifford/helm-charts/releases/download/chartdb-0.1.0/chartdb-0.1.0.tgz
+    version: 0.1.0
   fleetdm:
   - apiVersion: v2
     appVersion: 4.82.0
@@ -313,4 +338,4 @@ entries:
     urls:
     - https://github.com/donaldgifford/helm-charts/releases/download/fleetdm-0.1.0/fleetdm-0.1.0.tgz
     version: 0.1.0
-generated: "2026-04-30T14:56:58.895472738Z"
+generated: "2026-05-25T11:14:18.842599391Z"
