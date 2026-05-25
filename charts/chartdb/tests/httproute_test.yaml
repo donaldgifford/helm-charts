@@ -1,0 +1,119 @@
+---
+suite: httproute
+templates:
+  - templates/httproute.yaml
+tests:
+  - it: does not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when enabled but parentRefs empty (safe default)
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          parentRefs: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when parentRefs configured but disabled
+    set:
+      chartdb:
+        httpRoute:
+          enabled: false
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders HTTPRoute when enabled with parentRefs
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          hostname: chartdb.example.com
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+              sectionName: https
+    asserts:
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1
+      - equal:
+          path: spec.parentRefs[0].name
+          value: my-gateway
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: gateway-system
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: https
+      - equal:
+          path: spec.hostnames[0]
+          value: chartdb.example.com
+
+  - it: backend ref points to chartdb service on configured port
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME-chartdb
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 80
+
+  - it: backend port follows chartdb.service.port override
+    set:
+      chartdb:
+        service:
+          port: 8080
+        httpRoute:
+          enabled: true
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 8080
+
+  - it: omits hostnames block when hostname empty
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          hostname: ""
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+    asserts:
+      - notExists:
+          path: spec.hostnames
+
+  - it: passes annotations through
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          annotations:
+            kubernetes.io/description: chartdb
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+    asserts:
+      - equal:
+          path: metadata.annotations["kubernetes.io/description"]
+          value: chartdb

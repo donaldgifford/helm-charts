@@ -1,0 +1,336 @@
+---
+suite: deployment
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: renders a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: uses appVersion as default image tag
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "ghcr\\.io/chartdb/chartdb:1\\.20\\.1"
+
+  - it: uses explicit image tag when set
+    set:
+      chartdb:
+        image:
+          tag: "1.21.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "ghcr.io/chartdb/chartdb:1.21.0"
+
+  - it: sets replicas from chartdb.replicaCount
+    set:
+      chartdb:
+        replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: sets revisionHistoryLimit from values
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 1
+
+  - it: container listens on port 80 named http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 80
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: http
+
+  - it: pod runs as non-root nginx user 101
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 101
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 101
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 101
+
+  - it: container has readOnlyRootFilesystem and dropped capabilities
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop[0]
+          value: ALL
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.add[0]
+          value: NET_BIND_SERVICE
+
+  - it: seed-nginx-template init container copies template into shared emptyDir
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: seed-nginx-template
+      - matchRegex:
+          path: spec.template.spec.initContainers[0].image
+          pattern: "ghcr\\.io/chartdb/chartdb:1\\.20\\.1"
+      - contains:
+          path: spec.template.spec.initContainers[0].volumeMounts
+          content:
+            name: nginx-conf-d
+            mountPath: /seed
+
+  - it: extraInitContainers append after the seed init container
+    set:
+      chartdb:
+        extraInitContainers:
+          - name: my-init
+            image: busybox
+            command: ["true"]
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: seed-nginx-template
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: my-init
+
+  - it: mounts emptyDirs at the nginx writable paths
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: nginx-conf-d
+            mountPath: /etc/nginx/conf.d
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: nginx-cache
+            mountPath: /var/cache/nginx
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: nginx-run
+            mountPath: /var/run
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: tmp
+            mountPath: /tmp
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: nginx-conf-d
+            emptyDir: {}
+
+  - it: omits OPENAI_API_KEY when openai is disabled
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENAI_API_KEY
+
+  - it: wires OPENAI_API_KEY when openai is enabled with existingSecret
+    set:
+      chartdb:
+        openai:
+          enabled: true
+          existingSecret: my-openai
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-openai
+                key: openai-api-key
+
+  - it: renders OPENAI_API_ENDPOINT only when set
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENAI_API_ENDPOINT
+
+  - it: renders OPENAI_API_ENDPOINT with literal value when configured
+    set:
+      chartdb:
+        openai:
+          endpoint: "https://api.openai.com/v1"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENAI_API_ENDPOINT
+            value: "https://api.openai.com/v1"
+
+  - it: renders LLM_MODEL_NAME only when set
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LLM_MODEL_NAME
+
+  - it: renders LLM_MODEL_NAME with literal value when configured
+    set:
+      chartdb:
+        openai:
+          model: "gpt-4o-mini"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: LLM_MODEL_NAME
+            value: "gpt-4o-mini"
+
+  - it: always renders HIDE_CHARTDB_CLOUD as string false by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HIDE_CHARTDB_CLOUD
+            value: "false"
+
+  - it: renders HIDE_CHARTDB_CLOUD as string true when ui.hideChartdbCloud is true
+    set:
+      chartdb:
+        ui:
+          hideChartdbCloud: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HIDE_CHARTDB_CLOUD
+            value: "true"
+
+  - it: always renders DISABLE_ANALYTICS as string
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DISABLE_ANALYTICS
+            value: "false"
+
+  - it: additionalEnv entries append to env
+    set:
+      chartdb:
+        additionalEnv:
+          - name: FOO
+            value: bar
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: FOO
+            value: bar
+
+  - it: additionalEnvFrom entries render to envFrom
+    set:
+      chartdb:
+        additionalEnvFrom:
+          - configMapRef:
+              name: my-config
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: my-config
+
+  - it: liveness and readiness probes hit / on http port
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: http
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: http
+
+  - it: resources defaults are applied
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 10m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 32Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 128Mi
+
+  - it: nodeSelector / tolerations / affinity pass through
+    set:
+      chartdb:
+        nodeSelector:
+          disktype: ssd
+        tolerations:
+          - key: dedicated
+            operator: Equal
+            value: chartdb
+            effect: NoSchedule
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  topologyKey: kubernetes.io/hostname
+                  labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: chartdb
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: dedicated
+      - exists:
+          path: spec.template.spec.affinity.podAntiAffinity
+
+  - it: extraContainers and extraVolumes append
+    set:
+      chartdb:
+        extraContainers:
+          - name: sidecar
+            image: busybox
+        extraVolumes:
+          - name: my-extra
+            emptyDir: {}
+        extraVolumeMounts:
+          - name: my-extra
+            mountPath: /extra
+    asserts:
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: sidecar
+            image: busybox
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: my-extra
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: my-extra
+            mountPath: /extra

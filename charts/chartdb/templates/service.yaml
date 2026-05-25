@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "chartdb.fullname" . }}
+  labels:
+    {{- include "chartdb.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.chartdb.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.chartdb.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "chartdb.selectorLabels" . | nindent 4 }}

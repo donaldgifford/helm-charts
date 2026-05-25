@@ -1,0 +1,98 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+## Prerequisites
+
+| Dependency | Required Version | Required |
+|------------|-----------------|----------|
+| Kubernetes | 1.25+ | Yes |
+| Helm | 3.10+ | Yes |
+| Gateway API CRDs | v1 | When `chartdb.httpRoute.enabled: true` with `parentRefs` set |
+| cert-manager | v1.12+ | When `chartdb.httpRoute.certManager.enabled: true` |
+
+ChartDB is a stateless, single-page React app served by nginx. It has
+**no backing services** — no database, cache, ClickHouse, or object
+storage. Connections to user databases happen entirely in the browser.
+
+## Installation
+
+```sh
+helm repo add donaldgifford https://donaldgifford.github.io/helm-charts
+helm repo update
+
+# Default install (ClusterIP only, no north-south)
+helm install chartdb donaldgifford/chartdb
+
+# Install with classic Ingress
+helm install chartdb donaldgifford/chartdb \
+  --set chartdb.ingress.enabled=true \
+  --set chartdb.ingress.hosts[0].host=chartdb.example.com \
+  --set chartdb.ingress.hosts[0].paths[0].path=/ \
+  --set chartdb.ingress.hosts[0].paths[0].pathType=Prefix
+
+# Install with Gateway API HTTPRoute
+helm install chartdb donaldgifford/chartdb \
+  --set chartdb.httpRoute.enabled=true \
+  --set chartdb.httpRoute.hostname=chartdb.example.com \
+  --set chartdb.httpRoute.parentRefs[0].name=my-gateway \
+  --set chartdb.httpRoute.parentRefs[0].namespace=gateway-system
+
+# Install with OpenAI integration (requires existingSecret)
+kubectl create secret generic chartdb-openai \
+  --from-literal=openai-api-key='sk-...' \
+  -n <namespace>
+
+helm install chartdb donaldgifford/chartdb \
+  --set chartdb.openai.enabled=true \
+  --set chartdb.openai.existingSecret=chartdb-openai
+```
+
+## Configuration
+
+All app-shaped values live under `chartdb.*`. Only `nameOverride` and
+`fullnameOverride` live at the top level. See [DESIGN-0003][design-0003]
+for the rationale behind the values layout, security context choices,
+and the `seed-nginx-template` init container that supports
+`readOnlyRootFilesystem: true`.
+
+## Secret Management
+
+The chart **never** manages the OpenAI Secret. When
+`chartdb.openai.enabled: true`, you must provision the Secret
+out-of-band and set `chartdb.openai.existingSecret`. The helper
+`chartdb.openaiSecretName` fails closed with an actionable error if
+the chart is rendered with OpenAI enabled but no Secret name set.
+
+This pattern avoids password regeneration under `helm template`-driven
+workflows like ArgoCD without `--enable-helm-lookup`, kustomize
+`helmCharts`, or helmfile diff (see [INV-0001][inv-0001]).
+
+Provision externally with External Secrets Operator, 1Password
+Operator, sealed-secrets, or raw `kubectl create secret`:
+
+```sh
+kubectl create secret generic chartdb-openai \
+  --from-literal=openai-api-key='sk-...' \
+  -n <namespace>
+```
+
+[inv-0001]: https://github.com/donaldgifford/helm-charts/blob/main/docs/investigation/0001-fleetdm-secret-regeneration-under-helm-template.md
+[design-0003]: https://github.com/donaldgifford/helm-charts/blob/main/docs/design/0003-chartdb-helm-chart.md
+
+## Post-Install Validation
+
+```sh
+helm test chartdb -n <namespace>
+```
+
+This runs a curl probe against the Service to confirm the SPA is
+serving.
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "chart.maintainersSection" . }}

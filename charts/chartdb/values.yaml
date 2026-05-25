@@ -1,0 +1,182 @@
+---
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+# Everything chartdb-app-shaped lives under here.
+chartdb:
+  image:
+    # -- ChartDB container image repository
+    repository: ghcr.io/chartdb/chartdb
+    # -- Image tag (defaults to chart appVersion when empty)
+    tag: ""
+    # -- Image pull policy
+    pullPolicy: IfNotPresent
+    # -- Image pull secrets for private registries
+    pullSecrets: []
+
+  # -- Number of ChartDB replicas
+  replicaCount: 1
+  # -- Number of old ReplicaSets to retain for rollback
+  revisionHistoryLimit: 1
+
+  service:
+    # -- Service type (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
+    # -- Service port (clients connect here)
+    port: 80
+
+  serviceAccount:
+    # -- Create a ServiceAccount
+    create: true
+    # -- ServiceAccount annotations
+    annotations: {}
+    # -- Override the ServiceAccount name (defaults to fullname)
+    name: ""
+    # -- Whether to automount the ServiceAccount token in the pod. ChartDB does not need API server access.
+    automountServiceAccountToken: false
+
+  # -- Annotations applied to the chartdb pod
+  podAnnotations: {}
+  # -- Additional labels applied to the chartdb pod
+  podLabels: {}
+
+  # Pod-level security context. nginx in the upstream image runs as uid 101.
+  podSecurityContext:
+    # -- Require non-root for all containers in the pod
+    runAsNonRoot: true
+    # -- nginx user uid in the upstream alpine image
+    runAsUser: 101
+    # -- nginx group gid in the upstream alpine image
+    runAsGroup: 101
+    # -- Group id applied to mounted volumes
+    fsGroup: 101
+    seccompProfile:
+      # -- Seccomp profile type
+      type: RuntimeDefault
+
+  # Container-level security context. NET_BIND_SERVICE is required so nginx
+  # can bind :80 while running as non-root uid 101. See DESIGN-0003 §Decisions.
+  securityContext:
+    # -- Mount the container root filesystem read-only. Writable paths come from emptyDirs (see deployment template).
+    readOnlyRootFilesystem: true
+    # -- Disallow privilege escalation
+    allowPrivilegeEscalation: false
+    capabilities:
+      # -- Drop all Linux capabilities
+      drop:
+        - ALL
+      # -- Add NET_BIND_SERVICE so non-root nginx can bind to :80
+      add:
+        - NET_BIND_SERVICE
+
+  # -- Node selector for chartdb pods
+  nodeSelector: {}
+  # -- Tolerations for chartdb pods
+  tolerations: []
+  # -- Affinity rules for chartdb pods
+  affinity: {}
+  # -- Topology spread constraints for chartdb pods
+  topologySpreadConstraints: []
+
+  resources:
+    requests:
+      # -- chartdb CPU request
+      cpu: 10m
+      # -- chartdb memory request
+      memory: 32Mi
+    limits:
+      # -- chartdb memory limit (no CPU limit by default — nginx is bursty)
+      memory: 128Mi
+
+  livenessProbe:
+    # -- Liveness probe initial delay
+    initialDelaySeconds: 5
+    # -- Liveness probe period
+    periodSeconds: 10
+    # -- Liveness probe timeout
+    timeoutSeconds: 3
+    # -- Liveness probe failure threshold
+    failureThreshold: 3
+
+  readinessProbe:
+    # -- Readiness probe initial delay
+    initialDelaySeconds: 2
+    # -- Readiness probe period
+    periodSeconds: 5
+    # -- Readiness probe timeout
+    timeoutSeconds: 3
+    # -- Readiness probe failure threshold
+    failureThreshold: 3
+
+  openai:
+    # -- Enable wiring OPENAI_API_KEY env var from an existing Secret (required for ChartDB's AI features)
+    enabled: false
+    # -- Name of an existing Secret containing the OpenAI API key (required when openai.enabled is true; chart never generates one — see INV-0001)
+    existingSecret: ""
+    # -- Key in the openai secret that holds the API key
+    apiKeyKey: openai-api-key
+    # -- Custom LLM endpoint URL (literal value, optional — e.g. for Azure OpenAI or local LLMs)
+    endpoint: ""
+    # -- Custom LLM model name (literal value, optional)
+    model: ""
+
+  ui:
+    # -- Hide the ChartDB cloud signup/login UI
+    hideChartdbCloud: false
+    # -- Disable the Fathom analytics integration
+    disableAnalytics: false
+
+  # -- List of additional environment variables to add to the chartdb container
+  additionalEnv: []
+  # -- List of additional envFrom entries to add to the chartdb container
+  additionalEnvFrom: []
+  # -- Additional sidecar containers to add to the chartdb pod
+  extraContainers: []
+  # -- Additional volumes to add to the chartdb pod
+  extraVolumes: []
+  # -- Additional volume mounts to add to the chartdb container
+  extraVolumeMounts: []
+  # -- Additional init containers to add to the chartdb pod
+  extraInitContainers: []
+  # -- Lifecycle hooks for the chartdb container
+  extraLifecycle: {}
+
+  ingress:
+    # -- Enable classic Ingress
+    enabled: true
+    # -- Ingress class name
+    className: ""
+    # -- Ingress annotations
+    annotations: {}
+    # -- Ingress host rules
+    hosts: []
+    #   - host: chartdb.example.com
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    # -- Ingress TLS configuration
+    tls: []
+    #   - secretName: chartdb-tls
+    #     hosts:
+    #       - chartdb.example.com
+
+  httpRoute:
+    # -- Enable Gateway API HTTPRoute (alternative to classic Ingress)
+    enabled: false
+    # -- Hostname for the HTTPRoute
+    hostname: ""
+    # -- HTTPRoute annotations
+    annotations: {}
+    # -- Gateway parentRefs (HTTPRoute is only rendered when this list is non-empty)
+    parentRefs: []
+    #   - name: my-gateway
+    #     namespace: gateway-system
+    certManager:
+      # -- Enable cert-manager Certificate for HTTPRoute TLS
+      enabled: false
+      # -- cert-manager ClusterIssuer name
+      clusterIssuer: ""
+      # -- Certificate resource name (defaults to fullname-tls)
+      certificateName: ""
