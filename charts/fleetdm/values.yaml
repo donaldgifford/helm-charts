@@ -101,7 +101,7 @@ mysql:
     # -- MySQL image repository
     repository: mysql
     # -- MySQL image tag
-    tag: "8.0"
+    tag: "8.4"
   resources:
     requests:
       # -- MySQL CPU request
