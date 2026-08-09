@@ -129,7 +129,7 @@ valkey:
     # -- Valkey image repository
     repository: valkey/valkey
     # -- Valkey image tag
-    tag: "9.0.4"
+    tag: "9.1.1"
   # -- Number of Valkey replicas
   replicaCount: 1
   resources:
