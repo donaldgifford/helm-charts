@@ -23,7 +23,7 @@ syft = "latest"
 # v4 is newer may not work for all. If not use "3.19.0" or
 # a newer v3
 # helm = "4.0.4"
-helm = "3.21.0"
+helm = "4.2.4"
 helm-cr = "1.8.1"
 helm-ct = "3.14.0"
 helm-diff = "3.15.7"
