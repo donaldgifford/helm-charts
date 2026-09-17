@@ -3,7 +3,7 @@ apiVersion: v2
 name: fleetdm
 description: A Helm chart for FleetDM — open-source device management with embedded MySQL and optional Valkey cache
 type: application
-version: 0.4.4
+version: 0.4.5
 # renovate: image=fleetdm/fleet
 appVersion: "4.82.0"
 home: https://fleetdm.com

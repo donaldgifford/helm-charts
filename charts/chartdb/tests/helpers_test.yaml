@@ -1,0 +1,62 @@
+---
+suite: helpers
+# helpers_test exercises chartdb.openaiSecretName via the deployment template,
+# since helm-unittest can't invoke template helpers directly.
+templates:
+  - templates/deployment.yaml
+tests:
+  - it: openaiSecretName returns existingSecret when set
+    set:
+      chartdb:
+        openai:
+          enabled: true
+          existingSecret: my-openai-secret
+          apiKeyKey: openai-api-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-openai-secret
+                key: openai-api-key
+
+  - it: openaiSecretName fails closed when enabled with no existingSecret
+    set:
+      chartdb:
+        openai:
+          enabled: true
+          existingSecret: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "chartdb.openai.existingSecret is required when chartdb.openai.enabled is true. The chart does not generate an OpenAI Secret (see INV-0001). Provision the Secret out-of-band (External Secrets, 1Password Operator, sealed-secrets, or raw kubectl apply)."
+
+  - it: openaiSecretName silent when openai disabled and no existingSecret
+    set:
+      chartdb:
+        openai:
+          enabled: false
+          existingSecret: ""
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENAI_API_KEY
+
+  - it: custom apiKeyKey is honored
+    set:
+      chartdb:
+        openai:
+          enabled: true
+          existingSecret: my-secret
+          apiKeyKey: custom-key-name
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-secret
+                key: custom-key-name

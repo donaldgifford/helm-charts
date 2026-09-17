@@ -1,0 +1,42 @@
+{{- if and .Values.chartdb.ingress.enabled (gt (len .Values.chartdb.ingress.hosts) 0) }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "chartdb.fullname" . }}
+  labels:
+    {{- include "chartdb.labels" . | nindent 4 }}
+  {{- with .Values.chartdb.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.chartdb.ingress.className }}
+  ingressClassName: {{ .Values.chartdb.ingress.className }}
+  {{- end }}
+  {{- if .Values.chartdb.ingress.tls }}
+  tls:
+    {{- range .Values.chartdb.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.chartdb.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "chartdb.fullname" $ }}
+                port:
+                  number: {{ $.Values.chartdb.service.port }}
+          {{- end }}
+    {{- end }}
+{{- end }}

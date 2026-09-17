@@ -1,0 +1,103 @@
+---
+suite: certificate
+templates:
+  - templates/certificate.yaml
+tests:
+  - it: does not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when only httpRoute enabled (certManager disabled)
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          hostname: chartdb.example.com
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render when certManager enabled but httpRoute disabled
+    set:
+      chartdb:
+        httpRoute:
+          enabled: false
+          certManager:
+            enabled: true
+            clusterIssuer: letsencrypt-prod
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders Certificate when both httpRoute and certManager are enabled
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          hostname: chartdb.example.com
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+          certManager:
+            enabled: true
+            clusterIssuer: letsencrypt-prod
+    asserts:
+      - isKind:
+          of: Certificate
+      - equal:
+          path: apiVersion
+          value: cert-manager.io/v1
+      - equal:
+          path: spec.issuerRef.name
+          value: letsencrypt-prod
+      - equal:
+          path: spec.issuerRef.kind
+          value: ClusterIssuer
+      - equal:
+          path: spec.dnsNames[0]
+          value: chartdb.example.com
+
+  - it: defaults secretName and metadata.name to <fullname>-tls
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          hostname: chartdb.example.com
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+          certManager:
+            enabled: true
+            clusterIssuer: letsencrypt-prod
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-chartdb-tls
+      - equal:
+          path: spec.secretName
+          value: RELEASE-NAME-chartdb-tls
+
+  - it: honors explicit certificateName override
+    set:
+      chartdb:
+        httpRoute:
+          enabled: true
+          hostname: chartdb.example.com
+          parentRefs:
+            - name: my-gateway
+              namespace: gateway-system
+          certManager:
+            enabled: true
+            clusterIssuer: letsencrypt-prod
+            certificateName: custom-chartdb-tls
+    asserts:
+      - equal:
+          path: metadata.name
+          value: custom-chartdb-tls
+      - equal:
+          path: spec.secretName
+          value: custom-chartdb-tls

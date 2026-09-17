@@ -1,0 +1,23 @@
+---
+# CI test values: OpenAI integration enabled.
+# Tests that the chart renders cleanly with chartdb.openai.enabled=true
+# and an existingSecret name set. The Secret itself is provisioned by
+# ct install via the cr.yaml hook (see ci/openai-secret.yaml).
+chartdb:
+  ingress:
+    enabled: false
+
+  httpRoute:
+    enabled: false
+
+  openai:
+    enabled: true
+    existingSecret: chartdb-openai-stub
+    apiKeyKey: openai-api-key
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi

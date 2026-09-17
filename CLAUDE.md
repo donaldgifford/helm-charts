@@ -38,9 +38,10 @@ GitHub Actions CI (`.github/workflows/ci.yml`) runs on PRs to `main`:
 - **Helm Docs Check** — `helm-docs` diff to catch stale READMEs
 - **Security** — Trivy filesystem scan + rendered manifest scan (HIGH/CRITICAL)
 - **Renovate Validate** — validates `renovate.json5` config
-- **Chart Testing** — `ct lint` always; `ct install` in Kind only when charts change
+- **Chart Version Check** — fails the PR if files under a chart dir changed but `Chart.yaml` version didn't bump
+- **Chart Testing** — `ct lint --all` always. `ct install` in Kind is currently commented out because fleetdm needs external deps; chartdb is install-ready, but enabling per-chart in CI is tracked separately.
 
-Chart releases are triggered manually via `workflow_dispatch` on `chart-release.yml`.
+Chart releases are triggered manually via `workflow_dispatch` on `chart-release.yml` (uses `helm/chart-releaser-action` with `skip_existing: true`, so only new chart versions get tagged/released).
 
 ## Version Tracking
 
@@ -71,8 +72,23 @@ appVersion: "4.82.0"
 - **Investigation → Impl doc → Code → PR**: For non-trivial changes, use the docz lifecycle (`docz new investigation`, `docz new impl`) before code. The impl doc should have a Decisions table at the top capturing user-answered Q/A so the rationale survives the PR.
 - **Homelab is the only consumer**: Breaking-change coordination happens via the homelab values overlay only. Backwards-compat shims and migration scripts are usually unnecessary; just bump the chart version and document the upgrade path in the impl doc.
 - **Helm `lookup` is unreliable under `helm template`**: ArgoCD without `--enable-helm-lookup`, kustomize `helmCharts`, and helmfile diff all return empty from `lookup`. Don't use `lookup → fallback randAlphaNum` for secret generation — it regenerates on every render. Prefer requiring `existingSecret` and failing closed in the helper. (See INV-0001 in `docs/investigation/`.)
+- **`emptyDir` mounts can mask files baked into the image**: When `readOnlyRootFilesystem: true` requires mounting `emptyDir` over a directory that already contains files the entrypoint needs (e.g. nginx's `default.conf.template` under `/etc/nginx/conf.d/`), use a seed init container running the same image to `cp` the file into the shared `emptyDir` before the main container starts. Discovered mid-IMPL-0004 Phase 2 in Kind validation — `helm template` and `helm lint` won't catch this; only an actual pod run will.
+- **`ct install` with `existingSecret` requires pre-creating the Secret**: For a CI values file that sets `someComponent.existingSecret: my-stub`, `ct install` will not provision the Secret for you — the pod fails with `CreateContainerConfigError`. Workaround: `ct install --namespace <fixed-name>` and pre-create the Secret in that namespace before running.
 
 ## Charts
+
+### chartdb
+ChartDB Helm chart — a slim stateless wrapper around the upstream `ghcr.io/chartdb/chartdb` image. Released as `chartdb-0.1.0` on 2026-05-25 (PR #26, squash `89cd7f8`).
+- Single Deployment + ClusterIP Service. No backing services (no Postgres, Redis, ClickHouse, S3 — ChartDB is purely browser-side).
+- All app-shaped values namespaced under `chartdb.*`; only `nameOverride`/`fullnameOverride` at top level.
+- Non-root nginx (uid 101) + `capabilities: drop ALL, add NET_BIND_SERVICE` so we can bind `:80` while staying PSS-Restricted-compliant.
+- `readOnlyRootFilesystem: true` with `emptyDir` mounts over `/etc/nginx/conf.d/`, `/var/cache/nginx/`, `/var/run/`, `/tmp/`. A `seed-nginx-template` init container copies upstream's `default.conf.template` from the image into the shared `nginx-conf-d` emptyDir so the main container's envsubst entrypoint can render `default.conf` against it (mounting emptyDir over `/etc/nginx/conf.d/` would otherwise mask the template baked into the image). Validated end-to-end in Kind during IMPL-0004 Phase 2.
+- `OPENAI_API_KEY` (for ChartDB's AI features) is `existingSecret`-only — helper `chartdb.openaiSecretName` fails closed when `chartdb.openai.enabled: true` without a Secret name (per INV-0001 pattern).
+- Classic `Ingress` (default-on, guarded on non-empty `hosts`) and vanilla Gateway API `HTTPRoute` (default-off, guarded on non-empty `parentRefs`) under `chartdb.ingress.*` and `chartdb.httpRoute.*`. Optional cert-manager `Certificate` for HTTPRoute TLS in its own template (defaults to `<fullname>-tls` for both `metadata.name` and `secretName`, overridable via `certManager.certificateName`).
+- Replicas only — no HPA/KEDA/VPA/PDB in v0.1 (init-container approach to drop NET_BIND_SERVICE is tracked as a v0.2 Future Consideration in DESIGN-0003).
+- 7 unit test suites (49 tests) in `charts/chartdb/tests/`.
+- CI values: `ci/default-values.yaml` (no Ingress/HTTPRoute, OpenAI off) and `ci/openai-values.yaml` (OpenAI on with `existingSecret: chartdb-openai-stub`). For local `ct install` with openai-values to succeed, pre-create the stub Secret in the install namespace.
+- `ct install` in Kind is feasible (no external deps) and validated locally end-to-end (both CI values files install cleanly, helm test returns 200 against `/`). `ct install` remains disabled repo-wide in CI pending a multi-chart strategy.
 
 ### fleetdm
 FleetDM device management chart with embedded MySQL StatefulSet and optional Valkey cache.

@@ -1,0 +1,19 @@
+---
+# CI test values: minimal install, no Ingress, no HTTPRoute, no OpenAI.
+# ChartDB has no backing services so this is sufficient for ct install.
+chartdb:
+  ingress:
+    enabled: false
+
+  httpRoute:
+    enabled: false
+
+  openai:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi

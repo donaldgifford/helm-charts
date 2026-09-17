@@ -1,0 +1,168 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chartdb.fullname" . }}
+  labels:
+    {{- include "chartdb.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.chartdb.replicaCount }}
+  revisionHistoryLimit: {{ .Values.chartdb.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "chartdb.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "chartdb.selectorLabels" . | nindent 8 }}
+        {{- with .Values.chartdb.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.chartdb.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "chartdb.serviceAccountName" . }}
+      {{- with .Values.chartdb.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.chartdb.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        # Seed the nginx-conf-d emptyDir with the upstream's default.conf.template
+        # so the main container's envsubst can render default.conf into the same
+        # writable volume. Without this, mounting an emptyDir over
+        # /etc/nginx/conf.d/ would mask the template baked into the image.
+        - name: seed-nginx-template
+          image: {{ include "chartdb.image" . }}
+          imagePullPolicy: {{ .Values.chartdb.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - cp /etc/nginx/conf.d/default.conf.template /seed/default.conf.template
+          {{- with .Values.chartdb.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: nginx-conf-d
+              mountPath: /seed
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+        {{- with .Values.chartdb.extraInitContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: chartdb
+          image: {{ include "chartdb.image" . }}
+          imagePullPolicy: {{ .Values.chartdb.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          {{- with .Values.chartdb.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- if .Values.chartdb.openai.enabled }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chartdb.openaiSecretName" . }}
+                  key: {{ .Values.chartdb.openai.apiKeyKey }}
+            {{- end }}
+            {{- with .Values.chartdb.openai.endpoint }}
+            - name: OPENAI_API_ENDPOINT
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.chartdb.openai.model }}
+            - name: LLM_MODEL_NAME
+              value: {{ . | quote }}
+            {{- end }}
+            - name: HIDE_CHARTDB_CLOUD
+              value: {{ .Values.chartdb.ui.hideChartdbCloud | quote }}
+            - name: DISABLE_ANALYTICS
+              value: {{ .Values.chartdb.ui.disableAnalytics | quote }}
+            {{- with .Values.chartdb.additionalEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.chartdb.additionalEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.chartdb.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: {{ .Values.chartdb.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.chartdb.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.chartdb.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.chartdb.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: {{ .Values.chartdb.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.chartdb.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.chartdb.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.chartdb.readinessProbe.failureThreshold }}
+          volumeMounts:
+            - name: nginx-conf-d
+              mountPath: /etc/nginx/conf.d
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
+            {{- with .Values.chartdb.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.chartdb.extraLifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- with .Values.chartdb.extraContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      volumes:
+        - name: nginx-conf-d
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        {{- with .Values.chartdb.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.chartdb.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.chartdb.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.chartdb.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.chartdb.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

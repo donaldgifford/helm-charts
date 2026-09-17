@@ -15,7 +15,8 @@ helm search repo donaldgifford
 
 | Chart | Description |
 |-------|-------------|
-| [fleetdm](charts/fleetdm/) | FleetDM — open-source device management with PXC-backed MySQL and optional Valkey cache |
+| [chartdb](charts/chartdb/) | ChartDB — open-source database diagram editor. Slim stateless wrapper around the upstream `ghcr.io/chartdb/chartdb` image |
+| [fleetdm](charts/fleetdm/) | FleetDM — open-source device management with embedded MySQL StatefulSet and optional Valkey cache |
 
 ## Development
 

@@ -1,0 +1,16 @@
+{{- if and .Values.chartdb.httpRoute.enabled .Values.chartdb.httpRoute.certManager.enabled }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ default (printf "%s-tls" (include "chartdb.fullname" .)) .Values.chartdb.httpRoute.certManager.certificateName }}
+  labels:
+    {{- include "chartdb.labels" . | nindent 4 }}
+spec:
+  secretName: {{ default (printf "%s-tls" (include "chartdb.fullname" .)) .Values.chartdb.httpRoute.certManager.certificateName }}
+  issuerRef:
+    name: {{ .Values.chartdb.httpRoute.certManager.clusterIssuer }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ .Values.chartdb.httpRoute.hostname | quote }}
+{{- end }}
